@@ -1,124 +1,204 @@
-# import brownie
-# from brownie import *
-# import pytest
+import brownie
+from brownie import *
+import pytest
 
-# """
-# Tests for Upgrading Sett V1 to V4h
-# COMPLETE TODO HERE
-# """
+"""
+Tests for Upgrading Sett V1 to V4h
+"""
 
-# # sBTC CRV
-# # https://etherscan.io/address/0xd04c48A53c111300aD41190D63681ed3dAd998eC
-# # SettV1 -> Need to upgrade to SettV4++
-
-# # bSLP
-# # https://etherscan.io/address/0x1862A18181346EBd9EdAf800804f89190DeF24a5
-# # SettV1.1
-
-# wBTC / DIGG
-# https://etherscan.io/address/0x88128580ACdD9c04Ce47AFcE196875747bF2A9f6
-# SettV1.1
+# sBTC CRV
+# https://etherscan.io/address/0xd04c48A53c111300aD41190D63681ed3dAd998eC
+# SettV1 -> Need to upgrade to SettV4++
 
 # renBTC CRV
 # https://etherscan.io/address/0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545
 # SettV1
 
-# SETT_ADDRESS = "0xfd05D3C7fe2924020620A8bE4961bBaA747e6305"
-
-# STRAT_ADDRESS = "0x3ff634ce65cDb8CC0D569D6d1697c41aa666cEA9"
-
-# @pytest.fixture
-# def vault_proxy():
-#     return interface.ISett(SETT_ADDRESS)
-
-# @pytest.fixture
-# def proxy_admin():
-#     """
-#      Verify by doing web3.eth.getStorageAt("STRAT_ADDRESS", int(
-#         0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
-#     )).hex()
-#     """
-#     return Contract.from_explorer("0x20dce41acca85e8222d6861aa6d23b6c941777bf")
 
 
-# @pytest.fixture
-# def proxy_admin_gov():
-#     """
-#         Also found at proxy_admin.owner()
-#     """
-#     return accounts.at("0x21cf9b77f88adf8f8c98d7e33fe601dc57bc0893", force=True)
+LIST_OF_EXPLOITERS = [
+        "0xa33B95ea28542Ada32117B60E4F5B4cB7D1Fc19B",
+        "0x4fbf7701b3078B5bed6F3e64dF3AE09650eE7DE5",
+        "0x1B1b391D1026A4e3fB7F082ede068B25358a61F2",
+        "0xEcD91D07b1b6B81d24F2a469de8e47E3fe3050fd",
+        "0x691dA2826AC32BBF2a4b5d6f2A07CE07552A9A8E",
+        "0x91d65D67FC573605bCb0b5E39F9ef6E18aFA1586",
+        "0x0B88A083dc7b8aC2A84eBA02E4acb2e5f2d3063C",
+        "0x2eF1b70F195fd0432f9C36fB2eF7C99629B0398c",
+        "0xbbfD8041EbDE22A7f3e19600B4bab4925Cc97f7D",
+        "0xe06eD65924dB2e7b4c83E07079A424C8a36701E5"
+    ]
+
+SETT_ADDRESSES = [
+    "0xd04c48A53c111300aD41190D63681ed3dAd998eC",
+    "0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545"
+]
+
+@pytest.fixture
+def proxy_admin():
+    """
+     Verify by doing web3.eth.getStorageAt("STRAT_ADDRESS", int(
+        0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
+    )).hex()
+    """
+    return Contract.from_explorer("0x20dce41acca85e8222d6861aa6d23b6c941777bf")
 
 
-# def test_upgrade_and_harvest(vault_proxy):
+@pytest.fixture
+def proxy_admin_gov():
+    """
+        Also found at proxy_admin.owner()
+    """
+    return accounts.at("0x21cf9b77f88adf8f8c98d7e33fe601dc57bc0893", force=True)
+
+
+@pytest.fixture
+def bve_cvx():
+    """
+        Need to unpause for "advanced" vaults
+    """
+    return SettV4h.at("0xfd05D3C7fe2924020620A8bE4961bBaA747e6305")
+@pytest.fixture
+def bcvx_crv():
+    """
+        Need to unpause for "advanced" vaults
+    """
+    return SettV4h.at("0x2B5455aac8d64C14786c3a29858E43b5945819C0")
+
+@pytest.mark.parametrize(
+    "settAddress",
+    SETT_ADDRESSES,
+)
+def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx, bcvx_crv):
+    vault_proxy = SettV1h.at(settAddress)
+
+    prev_gov = vault_proxy.governance()
+
+    bve_gov = accounts.at(bve_cvx.governance(), force=True)
+    if(bve_cvx.paused()):
+        bve_cvx.unpause({"from": bve_gov})
+    bcvx_gov = accounts.at(bcvx_crv.governance(), force=True)
+    if(bcvx_crv.paused()):
+        bcvx_crv.unpause({"from": bcvx_gov})
+
+    governance = accounts.at(prev_gov, force=True)
+    ## TODO: Add new code that will revert as it's not there yet
+    with brownie.reverts():
+        vault_proxy.patchBalances({"from": governance}) ## Not yet implemented
+    with brownie.reverts():
+        vault_proxy.MULTISIG() ## Not yet implemented
+
+    ## Setting all variables, we'll use them later
+    prev_available = vault_proxy.available()
+    prev_gov = vault_proxy.governance()
+    prev_keeper = vault_proxy.keeper()
+    prev_token = vault_proxy.token()
+    prev_controller = vault_proxy.controller()
+    prev_balance = vault_proxy.balance()
+    prev_min = vault_proxy.min()
+    prev_max = vault_proxy.max()
+    prev_getPricePerFullShare = vault_proxy.getPricePerFullShare()
+    prev_available = vault_proxy.available()
+
+    ## TODO: Add write operations
+    new_vault_logic = SettV1h.deploy({"from": governance})
+
+    # Deploy new logic
+    proxy_admin.upgrade(vault_proxy, new_vault_logic, {"from": proxy_admin_gov})
+
+
+    ## Checking all variables are as expected
+    assert prev_available == vault_proxy.available()
+    assert prev_gov == vault_proxy.governance()
+    assert prev_keeper == vault_proxy.keeper()
+    assert prev_token == vault_proxy.token()
+    assert prev_controller == vault_proxy.controller()
+    assert prev_balance == vault_proxy.balance()
+    assert prev_min == vault_proxy.min()
+    assert prev_max == vault_proxy.max()
+    assert prev_getPricePerFullShare == vault_proxy.getPricePerFullShare()
+    assert prev_available == vault_proxy.available()
+
+
+
+    ## Verify new Addresses are setup properly
+    assert vault_proxy.MULTISIG() == "0xB65cef03b9B89f99517643226d76e286ee999e77"
+
+    # ## Also run all ordinary operation just because
+    ## deposit
+    ## depositAll
+    ## depositFor
+    ## withdraw
+    ## withdrawAll
+    ## transfer
+    ## transferFrom
+    ## harvest
+    ## earn
+    ## pause
+    ## unpause
+
+    ## Compare prev balance against new balances
+    prev_multi_balance = vault_proxy.balanceOf(vault_proxy.MULTISIG())
+
+    ## Harvest should work
+    vault_proxy.patchBalances({"from": governance})
+
+    after_balance = vault_proxy.balanceOf(vault_proxy.MULTISIG())
+
+    assert after_balance > prev_multi_balance  
+
+    for exploiter in LIST_OF_EXPLOITERS:
+        assert vault_proxy.balanceOf(exploiter) == 0
+
     
-#     ## TODO: Add new code that will revert as it's not there yet
-#     # with brownie.reverts():
-#     #     strat_proxy.CVX_EXTRA_REWARDS()
-#     # with brownie.reverts():
-#     #     strat_proxy.VOTIUM_BRIBE_CLAIMER()
-#     # with brownie.reverts():
-#     #     strat_proxy.BRIBES_RECEIVER()
 
-#     ## Setting all variables, we'll use them later
-#     prev_strategist = strat_proxy.strategist()
-#     prev_gov = strat_proxy.governance()
-#     prev_guardian = strat_proxy.guardian()
-#     prev_keeper = strat_proxy.keeper()
-#     prev_perFeeG = strat_proxy.performanceFeeGovernance()
-#     prev_perFeeS = strat_proxy.performanceFeeStrategist()
-#     prev_reward = strat_proxy.reward()
-#     prev_unit = strat_proxy.uniswap()
+    ## Let's run some operations now that we have funds
+    controller = interface.IController(vault_proxy.controller())
+    strat = interface.IStrategy(controller.strategies(vault_proxy.token()))
+    strat_gov = accounts.at(strat.governance(), force=True)
+    
+    if strat.paused():
+        strat.unpause({"from": strat_gov})
 
-#     prev_check_withdrawalSafetyCheck = strat_proxy.withdrawalSafetyCheck()
-#     prev_check_harvestOnRebalance = strat_proxy.harvestOnRebalance()
-#     prev_check_processLocksOnReinvest = strat_proxy.processLocksOnReinvest()
-#     prev_check_processLocksOnRebalance = strat_proxy.processLocksOnRebalance()
+    ## Earn
+    vault_proxy.earn({"from": governance})
+    assert vault_proxy.balance() == prev_balance
 
-#     # Deploy new logic
-#     proxy_admin.upgrade(strat_proxy, new_strat_logic, {"from": proxy_admin_gov})
+    ## Harvest
+    strat.harvest({"from": governance})
+    assert vault_proxy.getPricePerFullShare() >= prev_getPricePerFullShare  ## Not super happy about >= but it breaks for emitting
 
-#     gov = accounts.at(strat_proxy.governance(), force=True)
+    ## Withdraw
+    underlying = ERC20Upgradeable.at(vault_proxy.token())
+    prev_balance_of_underlying = underlying.balanceOf(governance)
+    vault_proxy.withdraw(1000, {"from": governance})
+    assert underlying.balanceOf(governance) > prev_balance_of_underlying 
 
 
-#     ## Checking all variables are as expected
-#     assert prev_strategist == strat_proxy.strategist()
-#     assert prev_gov == strat_proxy.governance()
-#     assert prev_guardian == strat_proxy.guardian()
-#     assert prev_keeper == strat_proxy.keeper()
-#     assert prev_perFeeG == strat_proxy.performanceFeeGovernance()
-#     assert prev_perFeeS == strat_proxy.performanceFeeStrategist()
-#     assert prev_reward == strat_proxy.reward()
-#     assert prev_unit == strat_proxy.uniswap()
-
-#     ## Checking new variables
-#     assert prev_check_withdrawalSafetyCheck == strat_proxy.withdrawalSafetyCheck()
-#     assert prev_check_harvestOnRebalance == strat_proxy.harvestOnRebalance()
-#     assert prev_check_processLocksOnReinvest == strat_proxy.processLocksOnReinvest()
-#     assert prev_check_processLocksOnRebalance == strat_proxy.processLocksOnRebalance()
-
-#     ## Verify new Addresses are setup properly
-#     assert strat_proxy.LOCKER() == "0xD18140b4B819b895A3dba5442F959fA44994AF50"
-#     assert strat_proxy.CVX_EXTRA_REWARDS() == "0x8Ed4bbf39E3080b35DA84a13A0D1A2FDcE1e0602"
-#     assert strat_proxy.VOTIUM_BRIBE_CLAIMER() == "0x378Ba9B73309bE80BF4C2c027aAD799766a7ED5A"
-#     assert strat_proxy.BRIBES_RECEIVER() == "0x6F76C6A1059093E21D8B1C13C4e20D8335e2909F"
+    ## WithdrawAll
+    prev_balance_of_underlying = underlying.balanceOf(governance)
+    vault_proxy.withdrawAll({"from": governance})
+    assert underlying.balanceOf(governance) > prev_balance_of_underlying 
 
 
-#     ## Also run all ordinary operation just because
-#     with brownie.reverts("no op"):
-#         ## Tend successfully fails as we hardcoded a revert
-#         strat_proxy.tend({"from": gov})
-#     with brownie.reverts("You have to wait for unlock or have to manually rebalance out of it"):
-#         ## Withdraw All successfully fails as we are locked
-#         controller_proxy.withdrawAll(vault_proxy.token(), {"from": accounts.at(controller_proxy.governance(), force=True)})
-#     vault_proxy.earn({"from": gov})
+    
+    ## Deposit
+    prev_shares = vault_proxy.balanceOf(governance)
+    prev_balance_of_underlying = underlying.balanceOf(governance)
+    underlying.approve(vault_proxy, underlying.balanceOf(governance), {"from": governance})
+    vault_proxy.deposit(1000, {"from": governance})
+    assert underlying.balanceOf(governance) < prev_balance_of_underlying 
+    assert vault_proxy.balanceOf(governance) > prev_shares
 
-#     ## Harvest should work
-#     strat_proxy.harvest({"from": gov})
-# © 2021 GitHub, Inc.
-# Terms
-# Privacy
+    ## DepositAll
+    prev_shares = vault_proxy.balanceOf(governance)
+    prev_balance_of_underlying = underlying.balanceOf(governance)
+    vault_proxy.depositAll({"from": governance})
+    assert underlying.balanceOf(governance) < prev_balance_of_underlying 
+    assert vault_proxy.balanceOf(governance) > prev_shares
 
 
-# def test_upgrade_sett_and_verify_integrity():
-#   sett = interface.ISett("0x2B5455aac8d64C14786c3a29858E43b5945819C0")
+
+
+
 
