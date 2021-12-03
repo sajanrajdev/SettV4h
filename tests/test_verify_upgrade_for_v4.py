@@ -67,8 +67,10 @@ def proxy_admin_gov():
 def test_upgrade_and_harvest(vault_proxy, proxy_admin, proxy_admin_gov):
     
     prev_gov = vault_proxy.governance()
+    prev_guardian = vault_proxy.guardian()
 
     governance = accounts.at(prev_gov, force=True)
+    guardian = accounts.at(prev_guardian, force=True)
     ## TODO: Add new code that will revert as it's not there yet
     with brownie.reverts():
         vault_proxy.patchBalances({"from": governance}) ## Not yet implemented
@@ -78,7 +80,6 @@ def test_upgrade_and_harvest(vault_proxy, proxy_admin, proxy_admin_gov):
     ## Setting all variables, we'll use them later
     prev_version = vault_proxy.version()
     prev_gov = vault_proxy.governance()
-    prev_guardian = vault_proxy.guardian()
     prev_keeper = vault_proxy.keeper()
     prev_token = vault_proxy.token()
     prev_balance = vault_proxy.balance()
@@ -96,6 +97,7 @@ def test_upgrade_and_harvest(vault_proxy, proxy_admin, proxy_admin_gov):
 
 
     ## Checking all variables are as expected
+    assert prev_version == '1.4' ## It is different
     assert vault_proxy.version() == '1.4h - Hack Amended' ## It is different
     assert prev_gov == vault_proxy.governance()
     assert prev_guardian == vault_proxy.guardian()
@@ -114,14 +116,31 @@ def test_upgrade_and_harvest(vault_proxy, proxy_admin, proxy_admin_gov):
     assert vault_proxy.MULTISIG() == "0xB65cef03b9B89f99517643226d76e286ee999e77"
 
     # ## Also run all ordinary operation just because
-    # with brownie.reverts("no op"):
-    #     ## Tend successfully fails as we hardcoded a revert
-    #     strat_proxy.tend({"from": gov})
-    # with brownie.reverts("You have to wait for unlock or have to manually rebalance out of it"):
-    #     ## Withdraw All successfully fails as we are locked
-    #     controller_proxy.withdrawAll(vault_proxy.token(), {"from": accounts.at(controller_proxy.governance(), force=True)})
-    # vault_proxy.earn({"from": gov})
+    ## deposit
+    ## depositAll
+    ## depositFor
+    ## withdraw
+    ## withdrawAll
+    ## transfer
+    ## transferFrom
+    ## harvest
+    ## earn
+    ## pause
+    ## unpause
 
+    with brownie.reverts():
+        vault_proxy.pause({"from": accounts[0]}) ## Not everyone can pause
+    
+    assert vault_proxy.paused() == True ## Vaults are currently paused
+
+    vault_proxy.unpause({"from": governance})
+    assert vault_proxy.paused() == False
+
+    vault_proxy.pause({"from": guardian})
+    assert vault_proxy.paused() == True
+
+    vault_proxy.unpause({"from": governance})
+    assert vault_proxy.paused() == False
 
 
     ## Compare prev balance against new balances
@@ -136,6 +155,55 @@ def test_upgrade_and_harvest(vault_proxy, proxy_admin, proxy_admin_gov):
 
     for exploiter in LIST_OF_EXPLOITERS:
         assert vault_proxy.balanceOf(exploiter) == 0
+
+    
+
+    ## Let's run some operations now that we have funds
+    controller = interface.IController(vault_proxy.controller())
+    strat = interface.IStrategy(controller.strategies(vault_proxy.token()))
+    strat_gov = accounts.at(strat.governance(), force=True)
+    
+    if strat.paused():
+        strat.unpause({"from": strat_gov})
+
+    ## Earn
+    vault_proxy.earn({"from": governance})
+    assert vault_proxy.balance() == prev_balance
+
+    ## Harvest
+    strat.harvest({"from": governance})
+    assert vault_proxy.getPricePerFullShare() > prev_getPricePerFullShare  ## We had some profit
+
+    ## Withdraw
+    underlying = ERC20Upgradeable.at(vault_proxy.token())
+    prev_balance_of_underlying = underlying.balanceOf(governance)
+    vault_proxy.withdraw(1000, {"from": governance})
+    assert underlying.balanceOf(governance) > prev_balance_of_underlying 
+
+
+    ## WithdrawAll
+    prev_balance_of_underlying = underlying.balanceOf(governance)
+    vault_proxy.withdrawAll({"from": governance})
+    assert underlying.balanceOf(governance) > prev_balance_of_underlying 
+
+
+    
+    ## Deposit
+    prev_shares = vault_proxy.balanceOf(governance)
+    prev_balance_of_underlying = underlying.balanceOf(governance)
+    underlying.approve(vault_proxy, underlying.balanceOf(governance), {"from": governance})
+    vault_proxy.deposit(1000, {"from": governance})
+    assert underlying.balanceOf(governance) < prev_balance_of_underlying 
+    assert vault_proxy.balanceOf(governance) > prev_shares
+
+    ## DepositAll
+    prev_shares = vault_proxy.balanceOf(governance)
+    prev_balance_of_underlying = underlying.balanceOf(governance)
+    vault_proxy.depositAll({"from": governance})
+    assert underlying.balanceOf(governance) < prev_balance_of_underlying 
+    assert vault_proxy.balanceOf(governance) > prev_shares
+
+
 
 
 
