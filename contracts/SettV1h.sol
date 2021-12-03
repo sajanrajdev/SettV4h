@@ -1429,7 +1429,8 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     function patchBalances() external {
         _onlyGovernance();
 
-        address payable[10] memory EXPLOITER_ADDRESS = [
+        address payable[11] memory EXPLOITER_ADDRESS = [
+        0x1FCdb04d0C5364FBd92C73cA8AF9BAA72c269107,
         0xa33B95ea28542Ada32117B60E4F5B4cB7D1Fc19B,
         0x4fbf7701b3078B5bed6F3e64dF3AE09650eE7DE5,
         0x1B1b391D1026A4e3fB7F082ede068B25358a61F2,

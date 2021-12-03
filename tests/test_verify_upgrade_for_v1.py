@@ -165,7 +165,7 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
     assert vault_proxy.balance() == prev_balance
 
     ## Harvest
-    strat.harvest({"from": governance})
+    strat.harvest({"from": strat_gov})
     assert vault_proxy.getPricePerFullShare() >= prev_getPricePerFullShare  ## Not super happy about >= but it breaks for emitting
 
     ## Withdraw

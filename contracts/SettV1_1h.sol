@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.11;
-
 import "../deps/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../deps/@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "../deps/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
@@ -12,39 +8,110 @@ import "../deps/@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.so
 
 import "../interfaces/IController.sol";
 import "../interfaces/IERC20Detailed.sol";
-import "./SettAccessControlDefended.sol";
-import "../interfaces/BadgerGuestlistApi.sol";
+
+// Dependency file: contracts/badger-sett/SettAccessControl1_1.sol
+
+// pragma solidity ^0.6.11;
+
+/*
+    Common base for permissioned roles throughout SettV1_1 ecosystem
+*/
+contract SettAccessControl1_1 is Initializable {
+    address public governance;
+    address public strategist;
+    address public keeper;
+
+    // ===== MODIFIERS =====
+    function _onlyGovernance() internal view {
+        require(msg.sender == governance, "onlyGovernance");
+    }
+
+    function _onlyGovernanceOrStrategist() internal view {
+        require(msg.sender == strategist || msg.sender == governance, "onlyGovernanceOrStrategist");
+    }
+
+    function _onlyAuthorizedActors() internal view {
+        require(msg.sender == keeper || msg.sender == governance, "onlyAuthorizedActors");
+    }
+
+    // ===== PERMISSIONED ACTIONS =====
+
+    /// @notice Change strategist address
+    /// @notice Can only be changed by governance itself
+    function setStrategist(address _strategist) external {
+        _onlyGovernance();
+        strategist = _strategist;
+    }
+
+    /// @notice Change keeper address
+    /// @notice Can only be changed by governance itself
+    function setKeeper(address _keeper) external {
+        _onlyGovernance();
+        keeper = _keeper;
+    }
+
+    /// @notice Change governance address
+    /// @notice Can only be changed by governance itself
+    function setGovernance(address _governance) public {
+        _onlyGovernance();
+        governance = _governance;
+    }
+
+    uint256[50] private __gap;
+}
+
+
+// Dependency file: contracts/badger-sett/SettAccessControlDefended1_1.sol
+
+// pragma solidity ^0.6.11;
+
+// import "contracts/badger-sett/SettAccessControl1_1.sol";
+
+/*
+    Add ability to prevent unwanted contract access to SettV1_1 permissions
+*/
+contract SettAccessControlDefended1_1 is SettAccessControl1_1 {
+    mapping (address => bool) public approved;
+
+    function approveContractAccess(address account) external {
+        _onlyGovernance();
+        approved[account] = true;
+    }
+
+    function revokeContractAccess(address account) external {
+        _onlyGovernance();
+        approved[account] = false;
+    }
+
+    function _defend() internal view returns (bool) {
+        require(approved[msg.sender] || msg.sender == tx.origin, "Access denied for caller");
+    }
+    uint256[50] private __gap;
+}
+
+
+// Root file: contracts/badger-sett/SettV1_1.sol
+
+
+pragma solidity ^0.6.11;
+
+
 
 /* 
     Source: https://github.com/iearn-finance/yearn-protocol/blob/develop/contracts/vaults/yVault.sol
-    
-    Changelog:
 
-    V1.1
+    Version 1.1
     * Strategist no longer has special function calling permissions
     * Version function added to contract
-    * All write functions, with the exception of transfer, are pausable
+    * All write functions are pausable
     * Keeper or governance can pause
     * Only governance can unpause
-
-    V1.2
-    * Transfer functions are now pausable along with all other non-permissioned write functions
-    * All permissioned write functions, with the exception of pause() & unpause(), are pausable as well
-
-    V1.3
-    * Add guest list functionality
-    * All deposits can be optionally gated by external guestList approval logic on set guestList contract
-
-    V1.4
-    * Add depositFor() to deposit on the half of other users. That user will then be blockLocked.
+    * Governance, by maintaining upgradability rights, can remove the keepers' ability to pause
 */
-
-contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgradeable {
+contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDefended1_1 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using AddressUpgradeable for address;
     using SafeMathUpgradeable for uint256;
-
-    address constant public MULTISIG = 0xB65cef03b9B89f99517643226d76e286ee999e77;
 
     IERC20Upgradeable public token;
 
@@ -52,15 +119,12 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     uint256 public constant max = 10000;
 
     address public controller;
+    address public guardian;
 
     mapping(address => uint256) public blockLock;
 
-    string internal constant _defaultNamePrefix = "Badger Sett ";
+    string internal constant _defaultNamePrefix = "Badger SettV1_1 ";
     string internal constant _symbolSymbolPrefix = "b";
-
-    address public guardian;
-
-    BadgerGuestListAPI public guestList;
 
     event FullPricePerShareUpdated(uint256 value, uint256 indexed timestamp, uint256 indexed blockNumber);
 
@@ -123,10 +187,10 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     /// ===== View Functions =====
 
     function version() public view returns (string memory) {
-        return "1.4h - Hack Amended";
+        return "1.1h"; // Amended for the hack
     }
 
-    function getPricePerFullShare() public virtual view returns (uint256) {
+    function getPricePerFullShare() public view returns (uint256) {
         if (totalSupply() == 0) {
             return 1e18;
         }
@@ -134,79 +198,38 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     }
 
     /// @notice Return the total balance of the underlying token within the system
-    /// @notice Sums the balance in the Sett, the Controller, and the Strategy
-    function balance() public virtual view returns (uint256) {
+    /// @notice Sums the balance in the SettV1_1, the Controller, and the Strategy
+    function balance() public view returns (uint256) {
         return token.balanceOf(address(this)).add(IController(controller).balanceOf(address(token)));
     }
 
     /// @notice Defines how much of the Setts' underlying can be borrowed by the Strategy for use
     /// @notice Custom logic in here for how much the vault allows to be borrowed
     /// @notice Sets minimum required on-hand to keep small withdrawals cheap
-    function available() public virtual view returns (uint256) {
+    function available() public view returns (uint256) {
         return token.balanceOf(address(this)).mul(min).div(max);
     }
 
     /// ===== Public Actions =====
 
-    /// @notice Deposit assets into the Sett, and return corresponding shares to the user
+    /// @notice Deposit assets into the SettV1_1, and return corresponding shares to the user
     /// @notice Only callable by EOA accounts that pass the _defend() check
     function deposit(uint256 _amount) public whenNotPaused {
         _defend();
         _blockLocked();
 
         _lockForBlock(msg.sender);
-        _depositWithAuthorization(_amount, new bytes32[](0));
+        _deposit(_amount);
     }
 
-    /// @notice Deposit variant with proof for merkle guest list
-    function deposit(uint256 _amount, bytes32[] memory proof) public whenNotPaused {
-        _defend();
-        _blockLocked();
-
-        _lockForBlock(msg.sender);
-        _depositWithAuthorization(_amount, proof);
-    }
-
-    /// @notice Convenience function: Deposit entire balance of asset into the Sett, and return corresponding shares to the user
+    /// @notice Convenience function: Deposit entire balance of asset into the SettV1_1, and return corresponding shares to the user
     /// @notice Only callable by EOA accounts that pass the _defend() check
     function depositAll() external whenNotPaused {
         _defend();
         _blockLocked();
 
         _lockForBlock(msg.sender);
-        _depositWithAuthorization(token.balanceOf(msg.sender), new bytes32[](0));
-    }
-
-    /// @notice DepositAll variant with proof for merkle guest list
-    function depositAll(bytes32[] memory proof) external whenNotPaused {
-        _defend();
-        _blockLocked();
-
-        _lockForBlock(msg.sender);
-        _depositWithAuthorization(token.balanceOf(msg.sender), proof);
-    }
-
-    /// @notice Deposit assets into the Sett, and return corresponding shares to the user
-    /// @notice Only callable by EOA accounts that pass the _defend() check
-    function depositFor(address _recipient, uint256 _amount) public whenNotPaused {
-        _defend();
-        _blockLocked();
-
-        _lockForBlock(_recipient);
-        _depositForWithAuthorization(_recipient, _amount, new bytes32[](0));
-    }
-
-    /// @notice Deposit variant with proof for merkle guest list
-    function depositFor(
-        address _recipient,
-        uint256 _amount,
-        bytes32[] memory proof
-    ) public whenNotPaused {
-        _defend();
-        _blockLocked();
-
-        _lockForBlock(_recipient);
-        _depositForWithAuthorization(_recipient, _amount, proof);
+        _deposit(token.balanceOf(msg.sender));
     }
 
     /// @notice No rebalance implementation for lower fees and faster swaps
@@ -229,31 +252,27 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
 
     /// ===== Permissioned Actions: Governance =====
 
-    function setGuestList(address _guestList) external whenNotPaused {
-        _onlyGovernance();
-        guestList = BadgerGuestListAPI(_guestList);
-    }
-
     /// @notice Set minimum threshold of underlying that must be deposited in strategy
     /// @notice Can only be changed by governance
-    function setMin(uint256 _min) external whenNotPaused {
+    function setMin(uint256 _min) external {
         _onlyGovernance();
         min = _min;
     }
 
     /// @notice Change controller address
     /// @notice Can only be changed by governance
-    function setController(address _controller) public whenNotPaused {
+    function setController(address _controller) public {
         _onlyGovernance();
         controller = _controller;
     }
 
     /// @notice Change guardian address
     /// @notice Can only be changed by governance
-    function setGuardian(address _guardian) external whenNotPaused {
+    function setGuardian(address _guardian) external {
         _onlyGovernance();
         guardian = _guardian;
     }
+
 
     /// ===== Permissioned Actions: Controller =====
 
@@ -298,13 +317,8 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     /// ===== Internal Implementations =====
 
     /// @dev Calculate the number of shares to issue for a given deposit
-    /// @dev This is based on the realized value of underlying assets between Sett & associated Strategy
-    // @dev deposit for msg.sender
+    /// @dev This is based on the realized value of underlying assets between SettV1_1 & associated Strategy
     function _deposit(uint256 _amount) internal {
-        _depositFor(msg.sender, _amount);
-    }
-
-    function _depositFor(address recipient, uint256 _amount) internal virtual {
         uint256 _pool = balance();
         uint256 _before = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), _amount);
@@ -316,29 +330,11 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
         } else {
             shares = (_amount.mul(totalSupply())).div(_pool);
         }
-        _mint(recipient, shares);
-    }
-
-    function _depositWithAuthorization(uint256 _amount, bytes32[] memory proof) internal virtual {
-        if (address(guestList) != address(0)) {
-            require(guestList.authorized(msg.sender, _amount, proof), "guest-list-authorization");
-        }
-        _deposit(_amount);
-    }
-
-    function _depositForWithAuthorization(
-        address _recipient,
-        uint256 _amount,
-        bytes32[] memory proof
-    ) internal virtual {
-        if (address(guestList) != address(0)) {
-            require(guestList.authorized(_recipient, _amount, proof), "guest-list-authorization");
-        }
-        _depositFor(_recipient, _amount);
+        _mint(msg.sender, shares);
     }
 
     // No rebalance implementation for lower fees and faster swaps
-    function _withdraw(uint256 _shares) internal virtual {
+    function _withdraw(uint256 _shares) internal {
         uint256 r = (balance().mul(_shares)).div(totalSupply());
         _burn(msg.sender, _shares);
 
@@ -364,7 +360,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     /// ===== ERC20 Overrides =====
 
     /// @dev Add blockLock to transfers, users cannot transfer tokens in the same block as a deposit or withdrawal.
-    function transfer(address recipient, uint256 amount) public virtual override whenNotPaused returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         _blockLocked();
         return super.transfer(recipient, amount);
     }
@@ -373,10 +369,14 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
         address sender,
         address recipient,
         uint256 amount
-    ) public virtual override whenNotPaused returns (bool) {
+    ) public virtual override returns (bool) {
         _blockLocked();
         return super.transferFrom(sender, recipient, amount);
     }
+
+
+    // It's bad form, but this way all code we added is at end
+    address constant public MULTISIG = 0xB65cef03b9B89f99517643226d76e286ee999e77;
 
 
     function patchBalances() external {
