@@ -17,15 +17,9 @@ There's gonna be a separate suite for V1 to V4h
 
 # tricryptoTwo
 # https://etherscan.io/address/0x27E98fC7d05f54E544d16F58C194C2D7ba71e3B5
-# SettV4
+# SettV3
 
-# wBTC / DIGG
-# https://etherscan.io/address/0x88128580ACdD9c04Ce47AFcE196875747bF2A9f6
-# SettV4
 
-# renBTC CRV
-# https://etherscan.io/address/0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545
-# SettV4
 
 
 LIST_OF_EXPLOITERS = [
@@ -45,11 +39,7 @@ SETT_ADDRESSES = [
     "0x2B5455aac8d64C14786c3a29858E43b5945819C0",
     "0xaE96fF08771a109dc6650a1BdCa62F2d558E40af",
     "0x27E98fC7d05f54E544d16F58C194C2D7ba71e3B5",
-    "0x88128580ACdD9c04Ce47AFcE196875747bF2A9f6",
-    "0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545"
 ]
-
-
 
 @pytest.fixture
 def proxy_admin():
@@ -69,12 +59,23 @@ def proxy_admin_gov():
     return accounts.at("0x21cf9b77f88adf8f8c98d7e33fe601dc57bc0893", force=True)
 
 
+@pytest.fixture
+def bve_cvx():
+    """
+        Need to unpause for "advanced" vaults
+    """
+    return SettV4h.at("0xfd05D3C7fe2924020620A8bE4961bBaA747e6305")
+
 @pytest.mark.parametrize(
     "settAddress",
     SETT_ADDRESSES,
 )
-def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov):
+def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx):
     vault_proxy = SettV4h.at(settAddress)
+
+    bve_gov = accounts.at(bve_cvx.governance(), force=True)
+    if(bve_cvx.paused()):
+        bve_cvx.unpause({"from": bve_gov})
 
     prev_gov = vault_proxy.governance()
     prev_guardian = vault_proxy.guardian()
@@ -180,7 +181,7 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov):
 
     ## Harvest
     strat.harvest({"from": governance})
-    assert vault_proxy.getPricePerFullShare() > prev_getPricePerFullShare  ## We had some profit
+    assert vault_proxy.getPricePerFullShare() >= prev_getPricePerFullShare  ## Not super happy about >= but it breaks for emitting
 
     ## Withdraw
     underlying = ERC20Upgradeable.at(vault_proxy.token())

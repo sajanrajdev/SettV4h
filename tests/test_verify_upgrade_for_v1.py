@@ -15,6 +15,14 @@
 # # https://etherscan.io/address/0x1862A18181346EBd9EdAf800804f89190DeF24a5
 # # SettV1.1
 
+# wBTC / DIGG
+# https://etherscan.io/address/0x88128580ACdD9c04Ce47AFcE196875747bF2A9f6
+# SettV1.1
+
+# renBTC CRV
+# https://etherscan.io/address/0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545
+# SettV1
+
 # SETT_ADDRESS = "0xfd05D3C7fe2924020620A8bE4961bBaA747e6305"
 
 # STRAT_ADDRESS = "0x3ff634ce65cDb8CC0D569D6d1697c41aa666cEA9"
