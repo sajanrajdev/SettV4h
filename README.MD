@@ -31,3 +31,16 @@ SettV4
 
 ## Notes
 https://hackmd.io/1HP29YMXR-GBvq34m3G-TQ
+
+
+## TODO
+
+[X] Test for upgrades V4
+[X] Test for upgrades V1
+[X] Test for upgrades V1_1
+
+[X] Functionality for Rescue Funds
+
+[] Global Blacklist
+[] brick transferFrom
+[] Global Pause
