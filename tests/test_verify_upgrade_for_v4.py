@@ -27,7 +27,6 @@ There's gonna be a separate suite for V1 to V4h
 # https://etherscan.io/address/0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545
 # SettV4
 
-SETT_ADDRESS = "0x2B5455aac8d64C14786c3a29858E43b5945819C0"
 
 LIST_OF_EXPLOITERS = [
         "0xa33B95ea28542Ada32117B60E4F5B4cB7D1Fc19B",
@@ -42,9 +41,15 @@ LIST_OF_EXPLOITERS = [
         "0xe06eD65924dB2e7b4c83E07079A424C8a36701E5"
     ]
 
-@pytest.fixture
-def vault_proxy():
-    return SettV4h.at(SETT_ADDRESS)
+SETT_ADDRESSES = [
+    "0x2B5455aac8d64C14786c3a29858E43b5945819C0",
+    "0xaE96fF08771a109dc6650a1BdCa62F2d558E40af",
+    "0x27E98fC7d05f54E544d16F58C194C2D7ba71e3B5",
+    "0x88128580ACdD9c04Ce47AFcE196875747bF2A9f6",
+    "0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545"
+]
+
+
 
 @pytest.fixture
 def proxy_admin():
@@ -64,8 +69,13 @@ def proxy_admin_gov():
     return accounts.at("0x21cf9b77f88adf8f8c98d7e33fe601dc57bc0893", force=True)
 
 
-def test_upgrade_and_harvest(vault_proxy, proxy_admin, proxy_admin_gov):
-    
+@pytest.mark.parametrize(
+    "settAddress",
+    SETT_ADDRESSES,
+)
+def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov):
+    vault_proxy = SettV4h.at(settAddress)
+
     prev_gov = vault_proxy.governance()
     prev_guardian = vault_proxy.guardian()
 
@@ -78,7 +88,6 @@ def test_upgrade_and_harvest(vault_proxy, proxy_admin, proxy_admin_gov):
         vault_proxy.MULTISIG() ## Not yet implemented
 
     ## Setting all variables, we'll use them later
-    prev_version = vault_proxy.version()
     prev_gov = vault_proxy.governance()
     prev_keeper = vault_proxy.keeper()
     prev_token = vault_proxy.token()
@@ -97,7 +106,6 @@ def test_upgrade_and_harvest(vault_proxy, proxy_admin, proxy_admin_gov):
 
 
     ## Checking all variables are as expected
-    assert prev_version == '1.4' ## It is different
     assert vault_proxy.version() == '1.4h - Hack Amended' ## It is different
     assert prev_gov == vault_proxy.governance()
     assert prev_guardian == vault_proxy.guardian()
