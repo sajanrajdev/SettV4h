@@ -98,6 +98,8 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     prev_guestList = vault_proxy.guestList()
     prev_getPricePerFullShare = vault_proxy.getPricePerFullShare()
     prev_available = vault_proxy.available()
+    prev_controller = vault_proxy.controller()
+
 
     ## TODO: Add write operations
     new_vault_logic = SettV4h.deploy({"from": governance})
@@ -110,6 +112,7 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     assert vault_proxy.version() == '1.4h - Hack Amended' ## It is different
     assert prev_gov == vault_proxy.governance()
     assert prev_guardian == vault_proxy.guardian()
+    assert prev_controller == vault_proxy.controller()
     assert prev_keeper == vault_proxy.keeper()
     assert prev_token == vault_proxy.token()
     assert prev_balance == vault_proxy.balance()
