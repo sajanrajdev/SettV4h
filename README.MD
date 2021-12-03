@@ -1,5 +1,17 @@
-## Contracts to Change to restitute some of the funds
 
+## TODO
+
+[X] Test for upgrades V4
+[X] Test for upgrades V1
+[X] Test for upgrades V1_1
+
+[X] Functionality for Rescue Funds
+
+[] Global Blacklist
+[] brick transferFrom
+[] Global Pause
+
+## Contracts to Change to restitute some of the funds
 
 sBTC CRV
 https://etherscan.io/address/0xd04c48A53c111300aD41190D63681ed3dAd998eC
@@ -33,14 +45,3 @@ SettV4
 https://hackmd.io/1HP29YMXR-GBvq34m3G-TQ
 
 
-## TODO
-
-[X] Test for upgrades V4
-[X] Test for upgrades V1
-[X] Test for upgrades V1_1
-
-[X] Functionality for Rescue Funds
-
-[] Global Blacklist
-[] brick transferFrom
-[] Global Pause
