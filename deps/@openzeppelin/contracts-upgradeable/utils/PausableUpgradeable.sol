@@ -52,8 +52,9 @@ contract PausableUpgradeable is Initializable, ContextUpgradeable {
      * Requirements:
      *
      * - The contract must not be paused.
+     * @notice we override in Sett Contract
      */
-    modifier whenNotPaused() {
+    modifier whenNotPaused() virtual {
         require(!_paused, "Pausable: paused");
         _;
     }

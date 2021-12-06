@@ -8,6 +8,7 @@ import "../deps/@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.so
 
 import "../interfaces/IController.sol";
 import "../interfaces/IERC20Detailed.sol";
+import "../interfaces/IGac.sol";
 
 // Dependency file: contracts/badger-sett/SettAccessControl1_1.sol
 
@@ -113,6 +114,9 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     using AddressUpgradeable for address;
     using SafeMathUpgradeable for uint256;
 
+    IGac public constant GAC = IGac(0x06E2188e4F03c19b3cf7A21b7E12dbbba65F395d); // Set in initializer because of tests is unchangeable (because contract is upgradeable)
+
+
     IERC20Upgradeable public token;
 
     uint256 public min;
@@ -127,6 +131,14 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     string internal constant _symbolSymbolPrefix = "b";
 
     event FullPricePerShareUpdated(uint256 value, uint256 indexed timestamp, uint256 indexed blockNumber);
+
+    modifier whenNotPaused() override {
+        require(!paused(), "Pausable: paused");
+        if(address(GAC) != address(0)){
+            require(!GAC.paused(), "Pausable: GAC Paused");
+        }
+        _;
+    }
 
     function initialize(
         address _token,

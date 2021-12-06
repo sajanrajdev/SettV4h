@@ -14,6 +14,7 @@ import "../interfaces/IController.sol";
 import "../interfaces/IERC20Detailed.sol";
 import "./SettAccessControlDefended.sol";
 import "../interfaces/BadgerGuestlistApi.sol";
+import "../interfaces/IGac.sol";
 
 /* 
     Source: https://github.com/iearn-finance/yearn-protocol/blob/develop/contracts/vaults/yVault.sol
@@ -45,6 +46,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     using SafeMathUpgradeable for uint256;
 
     address constant public MULTISIG = 0xB65cef03b9B89f99517643226d76e286ee999e77;
+    IGac public constant GAC = IGac(0x06E2188e4F03c19b3cf7A21b7E12dbbba65F395d); // Set in initializer because of tests is unchangeable (because contract is upgradeable)
 
     IERC20Upgradeable public token;
 
@@ -64,6 +66,14 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
 
     event FullPricePerShareUpdated(uint256 value, uint256 indexed timestamp, uint256 indexed blockNumber);
 
+    modifier whenNotPaused() override {
+        require(!paused(), "Pausable: paused");
+        if(address(GAC) != address(0)){
+            require(!GAC.paused(), "Pausable: GAC Paused");
+        }
+        _;
+    }
+
     function initialize(
         address _token,
         address _controller,
@@ -72,7 +82,8 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
         address _guardian,
         bool _overrideTokenName,
         string memory _namePrefix,
-        string memory _symbolPrefix
+        string memory _symbolPrefix,
+        address _gac
     ) public initializer whenNotPaused {
         IERC20Detailed namedToken = IERC20Detailed(_token);
         string memory tokenName = namedToken.name();
