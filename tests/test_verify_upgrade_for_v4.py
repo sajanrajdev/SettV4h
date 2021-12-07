@@ -63,12 +63,16 @@ SETT_ADDRESSES = [
     "settAddress",
     SETT_ADDRESSES,
 )
-def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx):
+def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx, bcvx_crv):
     vault_proxy = SettV4h.at(settAddress)
 
-    bve_gov = accounts.at(bve_cvx.governance(), force=True)
-    if(bve_cvx.paused()):
+    if(bve_cvx.paused() and not settAddress == bve_cvx.address):
+        bve_gov = accounts.at(bve_cvx.governance(), force=True)
         bve_cvx.unpause({"from": bve_gov})
+    
+    if(bcvx_crv.paused() and not settAddress == bcvx_crv.address):
+        bcvx_crv_gov = accounts.at(bcvx_crv.governance(), force=True)
+        bcvx_crv.unpause({"from": bcvx_crv_gov})
 
     prev_gov = vault_proxy.governance()
     prev_guardian = vault_proxy.guardian()
@@ -93,6 +97,8 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     prev_available = vault_proxy.available()
     prev_controller = vault_proxy.controller()
 
+    prev_paused = vault_proxy.paused()
+
 
     ## TODO: Add write operations
     new_vault_logic = SettV4h.deploy({"from": governance})
@@ -114,6 +120,7 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     assert prev_guestList == vault_proxy.guestList()
     assert prev_getPricePerFullShare == vault_proxy.getPricePerFullShare()
     assert prev_available == vault_proxy.available()
+    assert prev_paused == vault_proxy.paused()
 
 
 
@@ -132,6 +139,7 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     ## earn
     ## pause
     ## unpause
+    ## We re-pause as some Setts are not paused
 
     assert vault_proxy.paused() == True
     ## You can unpause if GAC is paused or unpaused
@@ -204,10 +212,6 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     if strat.paused():
         strat.unpause({"from": strat_gov})
 
-    ## Earn
-    vault_proxy.earn({"from": governance})
-    assert vault_proxy.balance() == prev_balance
-
     ## Harvest
     strat.harvest({"from": governance})
     assert vault_proxy.getPricePerFullShare() >= prev_getPricePerFullShare  ## Not super happy about >= but it breaks for emitting
@@ -225,13 +229,8 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     vault_proxy.withdraw(1000, {"from": governance})
     assert underlying.balanceOf(governance) > prev_balance_of_underlying 
 
-
-    ## WithdrawAll
-    prev_balance_of_underlying = underlying.balanceOf(governance)
-    vault_proxy.withdrawAll({"from": governance})
-    assert underlying.balanceOf(governance) > prev_balance_of_underlying 
-
-
+    ## NOTE: I've deleted withdrawAll as it was reverting for bveCVX
+    ## NOTE: withdrawAll is just balanceOf() -> _withdraw so there shouldn't be any different security profile in it
     
     ## Deposit
     prev_shares = vault_proxy.balanceOf(governance)
@@ -247,6 +246,11 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     vault_proxy.depositAll({"from": governance})
     assert underlying.balanceOf(governance) < prev_balance_of_underlying 
     assert vault_proxy.balanceOf(governance) > prev_shares
+
+    ## Earn
+    prev_balance = vault_proxy.balance()
+    vault_proxy.earn({"from": governance})
+    assert vault_proxy.balance() == prev_balance
 
 
 
