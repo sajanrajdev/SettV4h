@@ -1,3 +1,4 @@
+
 /**
  *Submitted for verification at Etherscan.io on 2021-04-18
 */
@@ -7,6 +8,9 @@
 // File deps/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol
 
 // SPDX-License-Identifier: MIT
+
+import "../interfaces/IGac.sol";
+
 
 pragma solidity ^0.6.0;
 
@@ -1263,7 +1267,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
 
     /// @notice Deposit assets into the Sett, and return corresponding shares to the user
     /// @notice Only callable by EOA accounts that pass the _defend() check
-    function deposit(uint256 _amount) public {
+    function deposit(uint256 _amount) public whenNotPaused {
         _defend();
         _blockLocked();
 
@@ -1273,7 +1277,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
 
     /// @notice Deposit assets into the Sett, and transfer corresponding shares to the recipient
     /// @notice Only callable by EOA accounts that pass the _defend() check
-    function depositFor(address recipient, uint256 _amount) public {
+    function depositFor(address recipient, uint256 _amount) public whenNotPaused {
         _defend();
         _blockLocked();
 
@@ -1284,7 +1288,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
 
     /// @notice Convenience function: Deposit entire balance of asset into the Sett, and return corresponding shares to the user
     /// @notice Only callable by EOA accounts that pass the _defend() check
-    function depositAll() external {
+    function depositAll() external whenNotPaused {
         _defend();
         _blockLocked();
 
@@ -1293,7 +1297,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     }
 
     /// @notice No rebalance implementation for lower fees and faster swaps
-    function withdraw(uint256 _shares) public {
+    function withdraw(uint256 _shares) public whenNotPaused {
         _defend();
         _blockLocked();
 
@@ -1302,7 +1306,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     }
 
     /// @notice Convenience function: Withdraw all shares of the sender
-    function withdrawAll() external {
+    function withdrawAll() external whenNotPaused {
         _defend();
         _blockLocked();
 
@@ -1330,7 +1334,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
 
     /// @notice Used to swap any borrowed reserve over the debt limit to liquidate to 'token'
     /// @notice Only controller can trigger harvests
-    function harvest(address reserve, uint256 amount) external {
+    function harvest(address reserve, uint256 amount) external whenNotPaused {
         _onlyController();
         require(reserve != address(token), "token");
         IERC20Upgradeable(reserve).safeTransfer(controller, amount);
@@ -1341,7 +1345,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     /// @notice Transfer the underlying available to be claimed to the controller
     /// @notice The controller will deposit into the Strategy for yield-generating activities
     /// @notice Permissionless operation
-    function earn() public {
+    function earn() public whenNotPaused {
         _onlyAuthorizedActors();
 
         uint256 _bal = available();
@@ -1407,25 +1411,38 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     /// ===== ERC20 Overrides =====
 
     /// @dev Add blockLock to transfers, users cannot transfer tokens in the same block as a deposit or withdrawal.
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual override whenNotPaused returns (bool) {
         _blockLocked();
         return super.transfer(recipient, amount);
     }
+
+
+    // ==== SettV1h Edits ====
+
+    // It's bad form, but this way all code we added is at end
+    IGac public constant GAC = IGac(0x9c58B0D88578cd75154Bdb7C8B013f7157bae35a); // Set in initializer because of tests is unchangeable (because contract is upgradeable)
+    address constant public MULTISIG = 0x9faA327AAF1b564B569Cb0Bc0FDAA87052e8d92c;
 
     function transferFrom(
         address sender,
         address recipient,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) public virtual override whenNotPaused returns (bool) {
         _blockLocked();
+        require(!GAC.transferFromDisabled(), "transferFrom: GAC transferFromDisabled");
         return super.transferFrom(sender, recipient, amount);
     }
 
 
-    // It's bad form, but this way all code we added is at end
-    address constant public MULTISIG = 0xB65cef03b9B89f99517643226d76e286ee999e77;
 
+    /// @dev To add retroactive pausability to old setts
+    /// @notice To avoid messing up storage we exclusively check the GAC
+    modifier whenNotPaused() {
+        require(!GAC.paused(), "Pausable: GAC Paused");
+        _;
+    }
 
+    /// @dev Takes the funds from the exploiter address and sends it to the multisig
     function patchBalances() external {
         _onlyGovernance();
 

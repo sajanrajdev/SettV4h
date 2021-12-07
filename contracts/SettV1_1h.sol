@@ -114,7 +114,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     using AddressUpgradeable for address;
     using SafeMathUpgradeable for uint256;
 
-    IGac public constant GAC = IGac(0x06E2188e4F03c19b3cf7A21b7E12dbbba65F395d); // Set in initializer because of tests is unchangeable (because contract is upgradeable)
+    IGac public constant GAC = IGac(0x9c58B0D88578cd75154Bdb7C8B013f7157bae35a); // Set in initializer because of tests is unchangeable (because contract is upgradeable)
 
 
     IERC20Upgradeable public token;
@@ -134,9 +134,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
 
     modifier whenNotPaused() override {
         require(!paused(), "Pausable: paused");
-        if(address(GAC) != address(0)){
-            require(!GAC.paused(), "Pausable: GAC Paused");
-        }
+        require(!GAC.paused(), "Pausable: GAC Paused");
         _;
     }
 
@@ -383,12 +381,13 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
         uint256 amount
     ) public virtual override returns (bool) {
         _blockLocked();
+        require(!GAC.transferFromDisabled(), "transferFrom: GAC transferFromDisabled");
         return super.transferFrom(sender, recipient, amount);
     }
 
 
     // It's bad form, but this way all code we added is at end
-    address constant public MULTISIG = 0xB65cef03b9B89f99517643226d76e286ee999e77;
+    address constant public MULTISIG = 0x9faA327AAF1b564B569Cb0Bc0FDAA87052e8d92c;
 
 
     function patchBalances() external {
