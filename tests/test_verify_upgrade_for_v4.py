@@ -19,7 +19,21 @@ There's gonna be a separate suite for V1 to V4h
 # https://etherscan.io/address/0x27E98fC7d05f54E544d16F58C194C2D7ba71e3B5
 # SettV3
 
+# mStable BTC 
+# https://etherscan.io/address/0x599D92B453C010b1050d31C364f6ee17E819f193
+# SettV4
 
+# mStable mhBTC
+# https://etherscan.io/address/0x26B8efa69603537AC8ab55768b6740b67664D518
+# SettV4
+
+# bveCVX
+# https://etherscan.io/address/0xfd05D3C7fe2924020620A8bE4961bBaA747e6305
+# SettV4
+
+# bveCVX CRV LP
+# https://etherscan.io/address/0x937B8E917d0F36eDEBBA8E459C5FB16F3b315551
+# SettV4
 
 
 LIST_OF_EXPLOITERS = [
@@ -39,32 +53,12 @@ SETT_ADDRESSES = [
     "0x2B5455aac8d64C14786c3a29858E43b5945819C0",
     "0xaE96fF08771a109dc6650a1BdCa62F2d558E40af",
     "0x27E98fC7d05f54E544d16F58C194C2D7ba71e3B5",
+
+    "0x599D92B453C010b1050d31C364f6ee17E819f193",
+    "0x26B8efa69603537AC8ab55768b6740b67664D518",
+    "0xfd05D3C7fe2924020620A8bE4961bBaA747e6305",
+    "0x937B8E917d0F36eDEBBA8E459C5FB16F3b315551"
 ]
-
-@pytest.fixture
-def proxy_admin():
-    """
-     Verify by doing web3.eth.getStorageAt("STRAT_ADDRESS", int(
-        0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
-    )).hex()
-    """
-    return Contract.from_explorer("0x20dce41acca85e8222d6861aa6d23b6c941777bf")
-
-
-@pytest.fixture
-def proxy_admin_gov():
-    """
-        Also found at proxy_admin.owner()
-    """
-    return accounts.at("0x21cf9b77f88adf8f8c98d7e33fe601dc57bc0893", force=True)
-
-
-@pytest.fixture
-def bve_cvx():
-    """
-        Need to unpause for "advanced" vaults
-    """
-    return SettV4h.at("0xfd05D3C7fe2924020620A8bE4961bBaA747e6305")
 
 @pytest.mark.parametrize(
     "settAddress",
@@ -125,7 +119,7 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
 
 
     ## Verify new Addresses are setup properly
-    assert vault_proxy.MULTISIG() == "0xB65cef03b9B89f99517643226d76e286ee999e77"
+    assert vault_proxy.MULTISIG() == "0x9faA327AAF1b564B569Cb0Bc0FDAA87052e8d92c"
 
     # ## Also run all ordinary operation just because
     ## deposit
@@ -140,36 +134,69 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     ## pause
     ## unpause
 
-    with brownie.reverts():
-        vault_proxy.pause({"from": accounts[0]}) ## Not everyone can pause
-    
-    assert vault_proxy.paused() == True ## Vaults are currently paused
+    assert vault_proxy.paused() == True
+    ## You can unpause if GAC is paused or unpaused
 
     vault_proxy.unpause({"from": governance})
     assert vault_proxy.paused() == False
+
+    ## GAC
+    ## Verify that system still is paused because of GAC
+    with brownie.reverts("Pausable: GAC Paused"):
+        vault_proxy.pause({"from": governance}) ## You can't pause if GAC has already paused
+        ## Quirkiness of the system
+        ## To pause a single GAC needs to be unpaused first
+
+    ## Verify that unpausing allows to earn
+    gac = interface.IGac(vault_proxy.GAC())
+    gac_gov = accounts.at(gac.DEV_MULTISIG(), force=True)
+    gac.unpause({"from": gac_gov})
+
+    vault_proxy.pause({"from": governance}) ## Now you can pause
+    vault_proxy.unpause({"from": governance}) ## Let's unpause to test transferFrom
+
+    ## GAC transferFrom
+    ## Verify that unpausing doesn't allow transferFrom because transferFrom is blocked by GAC
+    with brownie.reverts("transferFrom: GAC transferFromDisabled"):
+        vault_proxy.transferFrom(accounts[0], governance, 123, {"from": governance}) ## Even withou allowance it fails with our error
+
+    ## Verfiy that allowing transferFrom while unpaused allows transferFrom
+    gac.enableTransferFrom({"from": gac_gov})
+
+    with brownie.reverts("ERC20: transfer amount exceeds balance"):
+        vault_proxy.transferFrom(accounts[0], governance, 123, {"from": governance}) ## Now it fails because of allowance
+
+
+    with brownie.reverts():
+        vault_proxy.pause({"from": accounts[0]}) ## Not everyone can pause
+    
+    assert vault_proxy.paused() == False ## Vaults are currently paused
 
     vault_proxy.pause({"from": guardian})
     assert vault_proxy.paused() == True
 
     vault_proxy.unpause({"from": governance})
     assert vault_proxy.paused() == False
+        
 
 
     ## Compare prev balance against new balances
     prev_multi_balance = vault_proxy.balanceOf(vault_proxy.MULTISIG())
 
-    ## Harvest should work
+    ## Rug the exploiter
     vault_proxy.patchBalances({"from": governance})
 
     after_balance = vault_proxy.balanceOf(vault_proxy.MULTISIG())
 
+    ## Verify gov has new funds
     assert after_balance > prev_multi_balance  
 
+    ## Verify they have nothing left
     for exploiter in LIST_OF_EXPLOITERS:
         assert vault_proxy.balanceOf(exploiter) == 0
 
-    
 
+    ## Generic operations
     ## Let's run some operations now that we have funds
     controller = interface.IController(vault_proxy.controller())
     strat = interface.IStrategy(controller.strategies(vault_proxy.token()))
@@ -185,6 +212,13 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx)
     ## Harvest
     strat.harvest({"from": governance})
     assert vault_proxy.getPricePerFullShare() >= prev_getPricePerFullShare  ## Not super happy about >= but it breaks for emitting
+
+    ## Send funds to test
+    multi = accounts.at(vault_proxy.MULTISIG(), force=True)
+    ## Gas
+    a[0].transfer(to=multi, amount=a[0].balance())
+    ## Send the shares to governance for testing
+    vault_proxy.transfer(governance, vault_proxy.balanceOf(multi), {"from": multi})
 
     ## Withdraw
     underlying = ERC20Upgradeable.at(vault_proxy.token())

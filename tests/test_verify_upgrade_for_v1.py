@@ -34,37 +34,6 @@ SETT_ADDRESSES = [
     "0x6dEf55d2e18486B9dDfaA075bc4e4EE0B28c1545"
 ]
 
-@pytest.fixture
-def proxy_admin():
-    """
-     Verify by doing web3.eth.getStorageAt("STRAT_ADDRESS", int(
-        0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
-    )).hex()
-    """
-    return Contract.from_explorer("0x20dce41acca85e8222d6861aa6d23b6c941777bf")
-
-
-@pytest.fixture
-def proxy_admin_gov():
-    """
-        Also found at proxy_admin.owner()
-    """
-    return accounts.at("0x21cf9b77f88adf8f8c98d7e33fe601dc57bc0893", force=True)
-
-
-@pytest.fixture
-def bve_cvx():
-    """
-        Need to unpause for "advanced" vaults
-    """
-    return SettV4h.at("0xfd05D3C7fe2924020620A8bE4961bBaA747e6305")
-@pytest.fixture
-def bcvx_crv():
-    """
-        Need to unpause for "advanced" vaults
-    """
-    return SettV4h.at("0x2B5455aac8d64C14786c3a29858E43b5945819C0")
-
 @pytest.mark.parametrize(
     "settAddress",
     SETT_ADDRESSES,
@@ -122,7 +91,7 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
 
 
     ## Verify new Addresses are setup properly
-    assert vault_proxy.MULTISIG() == "0xB65cef03b9B89f99517643226d76e286ee999e77"
+    assert vault_proxy.MULTISIG() == "0x9faA327AAF1b564B569Cb0Bc0FDAA87052e8d92c"
 
     # ## Also run all ordinary operation just because
     ## deposit
@@ -136,6 +105,30 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
     ## earn
     ## pause
     ## unpause
+
+    ## GAC
+    ## Verify that system still is paused because of GAC
+    with brownie.reverts("Pausable: GAC Paused"):
+        vault_proxy.earn({"from": governance}) ## You earn if GAC is paused
+        ## Quirkiness of the system
+        ## To pause a single GAC needs to be unpaused first
+
+    ## Verify that unpausing allows to earn
+    gac = interface.IGac(vault_proxy.GAC())
+    gac_gov = accounts.at(gac.DEV_MULTISIG(), force=True)
+    gac.unpause({"from": gac_gov})
+
+
+    ## GAC transferFrom
+    ## Verify that unpausing doesn't allow transferFrom because transferFrom is blocked by GAC
+    with brownie.reverts("transferFrom: GAC transferFromDisabled"):
+        vault_proxy.transferFrom(accounts[0], governance, 123, {"from": governance}) ## Even withou allowance it fails with our error
+
+    ## Verfiy that allowing transferFrom while unpaused allows transferFrom
+    gac.enableTransferFrom({"from": gac_gov})
+
+    with brownie.reverts("ERC20: transfer amount exceeds balance"):
+        vault_proxy.transferFrom(accounts[0], governance, 123, {"from": governance}) ## Now it fails because of allowance
 
     ## Compare prev balance against new balances
     prev_multi_balance = vault_proxy.balanceOf(vault_proxy.MULTISIG())
@@ -167,6 +160,13 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
     ## Harvest
     strat.harvest({"from": strat_gov})
     assert vault_proxy.getPricePerFullShare() >= prev_getPricePerFullShare  ## Not super happy about >= but it breaks for emitting
+
+    ## Send funds to test
+    multi = accounts.at(vault_proxy.MULTISIG(), force=True)
+    ## Gas
+    a[0].transfer(to=multi, amount=a[0].balance())
+    ## Send the shares to governance for testing
+    vault_proxy.transfer(governance, vault_proxy.balanceOf(multi), {"from": multi})
 
     ## Withdraw
     underlying = ERC20Upgradeable.at(vault_proxy.token())
