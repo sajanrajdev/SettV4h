@@ -18,9 +18,5 @@ interface IGac {
     function pause() external;
     function enableTransferFrom() external;
     function disableTransferFrom() external;
-}
 
-    function enableTransferFrom() external;
-
-    function grantRole(bytes32 role, address account) external;
 }
