@@ -207,7 +207,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     function depositFor(address _recipient, uint256 _amount) public whenNotPaused {
         _defend();
         _blockLocked();
-        _blacklisted(_recipient);
+        _blacklisted(msg.sender);
 
         _lockForBlock(_recipient);
         _depositForWithAuthorization(_recipient, _amount, new bytes32[](0));
@@ -221,7 +221,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     ) public whenNotPaused {
         _defend();
         _blockLocked();
-        _blacklisted(_recipient);
+        _blacklisted(msg.sender);
 
         _lockForBlock(_recipient);
         _depositForWithAuthorization(_recipient, _amount, proof);
@@ -397,6 +397,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     ) public virtual override whenNotPaused returns (bool) {
         _blockLocked();
         _blacklisted(msg.sender);
+        _blacklisted(sender);
         require(!GAC.transferFromDisabled(), "transferFrom: GAC transferFromDisabled");
         return super.transferFrom(sender, recipient, amount);
     }

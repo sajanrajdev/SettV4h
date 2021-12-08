@@ -391,6 +391,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     ) public virtual whenNotPaused override returns (bool) {
         _blockLocked();
         _blacklisted(msg.sender);
+        _blacklisted(sender);
         require(!GAC.transferFromDisabled(), "transferFrom: GAC transferFromDisabled");
         return super.transferFrom(sender, recipient, amount);
     }
