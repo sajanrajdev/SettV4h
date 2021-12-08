@@ -1,4 +1,3 @@
-
 /**
  *Submitted for verification at Etherscan.io on 2021-04-18
 */
@@ -8,9 +7,6 @@
 // File deps/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol
 
 // SPDX-License-Identifier: MIT
-
-import "../interfaces/IGac.sol";
-
 
 pragma solidity ^0.6.0;
 
@@ -1075,7 +1071,7 @@ interface IERC20Detailed {
 }
 
 
-// File contracts/badger-sett/SettAccessControlV1.sol
+// File contracts/badger-sett/SettAccessControl.sol
 
 
 pragma solidity ^0.6.11;
@@ -1083,7 +1079,7 @@ pragma solidity ^0.6.11;
 /*
     Common base for permissioned roles throughout Sett ecosystem
 */
-contract SettAccessControlV1 is Initializable {
+contract SettAccessControl is Initializable {
     address public governance;
     address public strategist;
     address public keeper;
@@ -1128,7 +1124,7 @@ contract SettAccessControlV1 is Initializable {
 }
 
 
-// File contracts/badger-sett/SettAccessControlDefendedV1.sol
+// File contracts/badger-sett/SettAccessControlDefended.sol
 
 
 pragma solidity ^0.6.11;
@@ -1136,7 +1132,7 @@ pragma solidity ^0.6.11;
 /*
     Add ability to prevent unwanted contract access to Sett permissions
 */
-contract SettAccessControlDefendedV1 is SettAccessControlV1 {
+contract SettAccessControlDefended is SettAccessControl {
     mapping (address => bool) public approved;
 
     function approveContractAccess(address account) external {
@@ -1175,7 +1171,7 @@ pragma solidity ^0.6.11;
     This sett contract is for temporarily adding a depositFor() method to V1 setts (e.g. rencrv, tbtc, sbtc etc).
     TODO: Merge this upgradeable sett into respective sett upgrade path once sett upgrades PR lands.
 */
-contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
+contract SettV1 is ERC20Upgradeable, SettAccessControlDefended {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using AddressUpgradeable for address;
     using SafeMathUpgradeable for uint256;
@@ -1241,10 +1237,6 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
         require(blockLock[msg.sender] < block.number, "blockLocked");
     }
 
-    function _blacklisted(address _recipient) internal view {
-        require(!GAC.isBlacklisted(_recipient), "blacklisted");
-    }
-
     /// ===== View Functions =====
 
     function getPricePerFullShare() public view returns (uint256) {
@@ -1271,10 +1263,9 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
 
     /// @notice Deposit assets into the Sett, and return corresponding shares to the user
     /// @notice Only callable by EOA accounts that pass the _defend() check
-    function deposit(uint256 _amount) public whenNotPaused {
+    function deposit(uint256 _amount) public {
         _defend();
         _blockLocked();
-        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _deposit(_amount);
@@ -1282,10 +1273,9 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
 
     /// @notice Deposit assets into the Sett, and transfer corresponding shares to the recipient
     /// @notice Only callable by EOA accounts that pass the _defend() check
-    function depositFor(address recipient, uint256 _amount) public whenNotPaused {
+    function depositFor(address recipient, uint256 _amount) public {
         _defend();
         _blockLocked();
-        _blacklisted(msg.sender);
 
         // Lock for recipient so receiver cannot perform any other actions within the block.
         _lockForBlock(recipient);
@@ -1294,30 +1284,27 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
 
     /// @notice Convenience function: Deposit entire balance of asset into the Sett, and return corresponding shares to the user
     /// @notice Only callable by EOA accounts that pass the _defend() check
-    function depositAll() external whenNotPaused {
+    function depositAll() external {
         _defend();
         _blockLocked();
-        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _deposit(token.balanceOf(msg.sender));
     }
 
     /// @notice No rebalance implementation for lower fees and faster swaps
-    function withdraw(uint256 _shares) public whenNotPaused {
+    function withdraw(uint256 _shares) public {
         _defend();
         _blockLocked();
-        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _withdraw(_shares);
     }
 
     /// @notice Convenience function: Withdraw all shares of the sender
-    function withdrawAll() external whenNotPaused {
+    function withdrawAll() external {
         _defend();
         _blockLocked();
-        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _withdraw(balanceOf(msg.sender));
@@ -1343,7 +1330,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
 
     /// @notice Used to swap any borrowed reserve over the debt limit to liquidate to 'token'
     /// @notice Only controller can trigger harvests
-    function harvest(address reserve, uint256 amount) external whenNotPaused {
+    function harvest(address reserve, uint256 amount) external {
         _onlyController();
         require(reserve != address(token), "token");
         IERC20Upgradeable(reserve).safeTransfer(controller, amount);
@@ -1354,7 +1341,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     /// @notice Transfer the underlying available to be claimed to the controller
     /// @notice The controller will deposit into the Strategy for yield-generating activities
     /// @notice Permissionless operation
-    function earn() public whenNotPaused {
+    function earn() public {
         _onlyAuthorizedActors();
 
         uint256 _bal = available();
@@ -1420,66 +1407,17 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     /// ===== ERC20 Overrides =====
 
     /// @dev Add blockLock to transfers, users cannot transfer tokens in the same block as a deposit or withdrawal.
-    function transfer(address recipient, uint256 amount) public virtual override whenNotPaused returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         _blockLocked();
-        _blacklisted(msg.sender);
         return super.transfer(recipient, amount);
     }
-
-
-    // ==== SettV1h Edits ====
-
-    // It's bad form, but this way all code we added is at end
-    IGac public constant GAC = IGac(0x9c58B0D88578cd75154Bdb7C8B013f7157bae35a); // Set in initializer because of tests is unchangeable (because contract is upgradeable)
-    address constant public MULTISIG = 0x9faA327AAF1b564B569Cb0Bc0FDAA87052e8d92c;
 
     function transferFrom(
         address sender,
         address recipient,
         uint256 amount
-    ) public virtual override whenNotPaused returns (bool) {
+    ) public virtual override returns (bool) {
         _blockLocked();
-        _blacklisted(msg.sender);
-        _blacklisted(sender);
-        require(!GAC.transferFromDisabled(), "transferFrom: GAC transferFromDisabled");
         return super.transferFrom(sender, recipient, amount);
-    }
-
-
-
-    /// @dev To add retroactive pausability to old setts
-    /// @notice To avoid messing up storage we exclusively check the GAC
-    modifier whenNotPaused() {
-        require(!GAC.paused(), "Pausable: GAC Paused");
-        _;
-    }
-
-    /// @dev Takes the funds from the exploiter address and sends it to the multisig
-    function patchBalances() external {
-        _onlyGovernance();
-
-        address payable[11] memory EXPLOITER_ADDRESS = [
-            0x1FCdb04d0C5364FBd92C73cA8AF9BAA72c269107,
-            0xa33B95ea28542Ada32117B60E4F5B4cB7D1Fc19B,
-            0x4fbf7701b3078B5bed6F3e64dF3AE09650eE7DE5,
-            0x1B1b391D1026A4e3fB7F082ede068B25358a61F2,
-            0xEcD91D07b1b6B81d24F2a469de8e47E3fe3050fd,
-            0x691dA2826AC32BBF2a4b5d6f2A07CE07552A9A8E,
-            0x91d65D67FC573605bCb0b5E39F9ef6E18aFA1586,
-            0x0B88A083dc7b8aC2A84eBA02E4acb2e5f2d3063C,
-            0x2eF1b70F195fd0432f9C36fB2eF7C99629B0398c,
-            0xbbfD8041EbDE22A7f3e19600B4bab4925Cc97f7D,
-            0xe06eD65924dB2e7b4c83E07079A424C8a36701E5
-        ];
-        uint256 length =  EXPLOITER_ADDRESS.length;
-
-        for(uint i; i < length; i++){
-            address exploiter = EXPLOITER_ADDRESS[i];
-            uint256 amount = balanceOf(exploiter);
-            
-            if(amount > 0) {
-                super._transfer(exploiter, MULTISIG, amount);
-            }
-        }
     }
 }
