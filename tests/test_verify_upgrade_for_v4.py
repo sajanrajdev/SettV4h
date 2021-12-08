@@ -37,17 +37,17 @@ There's gonna be a separate suite for V1 to V4h
 
 
 LIST_OF_EXPLOITERS = [
-        "0xa33B95ea28542Ada32117B60E4F5B4cB7D1Fc19B",
-        "0x4fbf7701b3078B5bed6F3e64dF3AE09650eE7DE5",
-        "0x1B1b391D1026A4e3fB7F082ede068B25358a61F2",
-        "0xEcD91D07b1b6B81d24F2a469de8e47E3fe3050fd",
-        "0x691dA2826AC32BBF2a4b5d6f2A07CE07552A9A8E",
-        "0x91d65D67FC573605bCb0b5E39F9ef6E18aFA1586",
-        "0x0B88A083dc7b8aC2A84eBA02E4acb2e5f2d3063C",
-        "0x2eF1b70F195fd0432f9C36fB2eF7C99629B0398c",
-        "0xbbfD8041EbDE22A7f3e19600B4bab4925Cc97f7D",
-        "0xe06eD65924dB2e7b4c83E07079A424C8a36701E5"
-    ]
+    "0xa33B95ea28542Ada32117B60E4F5B4cB7D1Fc19B",
+    "0x4fbf7701b3078B5bed6F3e64dF3AE09650eE7DE5",
+    "0x1B1b391D1026A4e3fB7F082ede068B25358a61F2",
+    "0xEcD91D07b1b6B81d24F2a469de8e47E3fe3050fd",
+    "0x691dA2826AC32BBF2a4b5d6f2A07CE07552A9A8E",
+    "0x91d65D67FC573605bCb0b5E39F9ef6E18aFA1586",
+    "0x0B88A083dc7b8aC2A84eBA02E4acb2e5f2d3063C",
+    "0x2eF1b70F195fd0432f9C36fB2eF7C99629B0398c",
+    "0xbbfD8041EbDE22A7f3e19600B4bab4925Cc97f7D",
+    "0xe06eD65924dB2e7b4c83E07079A424C8a36701E5"
+]
 
 SETT_ADDRESSES = [
     "0x2B5455aac8d64C14786c3a29858E43b5945819C0",
@@ -186,19 +186,21 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
     assert vault_proxy.paused() == False
         
 
-
     ## Compare prev balance against new balances
     prev_multi_balance = vault_proxy.balanceOf(vault_proxy.MULTISIG())
 
-    ## Rug the exploiter
+    ## Get total stolen sett balances
+    stolen_balance = 0
+    for exploiter in LIST_OF_EXPLOITERS:
+        stolen_balance += vault_proxy.balanceOf(exploiter)
+
     vault_proxy.patchBalances({"from": governance})
 
     after_balance = vault_proxy.balanceOf(vault_proxy.MULTISIG())
 
-    ## Verify gov has new funds
-    assert after_balance > prev_multi_balance  
+    assert after_balance > prev_multi_balance
+    assert after_balance == prev_multi_balance + stolen_balance
 
-    ## Verify they have nothing left
     for exploiter in LIST_OF_EXPLOITERS:
         assert vault_proxy.balanceOf(exploiter) == 0
 
@@ -252,8 +254,58 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
     vault_proxy.earn({"from": governance})
     assert vault_proxy.balance() == prev_balance
 
+    ## Transfer From
+    rando = accounts[1]
+    amount = vault_proxy.balanceOf(multi)/4
+    vault_proxy.approve(rando, vault_proxy.balanceOf(multi), {"from": multi})
+    vault_proxy.transferFrom(
+        multi.address, 
+        rando.address, 
+        amount, 
+        {"from": rando}
+    )
+    assert vault_proxy.balanceOf(rando.address) == amount
 
+    # Globally disable transferFrom
+    gac.disableTransferFrom({"from": gac_gov})
+    with brownie.reverts("transferFrom: GAC transferFromDisabled"):
+        vault_proxy.transferFrom(
+            multi.address, 
+            rando.address, 
+            amount, 
+            {"from": rando}
+        )
+    gac.enableTransferFrom({"from": gac_gov})
 
+    # Globally pause
+    gac.pause({"from": gac_gov})
+
+    # Cannot transferFrom while globally paused
+    with brownie.reverts("Pausable: GAC Paused"):
+        vault_proxy.transferFrom(
+            multi.address, 
+            rando.address, 
+            amount, 
+            {"from": rando}
+        )
+
+    # Cannot perform transfer while globally paused
+    with brownie.reverts("Pausable: GAC Paused"):
+        vault_proxy.transfer(
+            accounts[2],
+            amount, 
+            {"from": rando}
+        )
+
+    # Globally pause
+    gac.unpause({"from": gac_gov})
+    
+    vault_proxy.transfer(
+        accounts[2],
+        amount, 
+        {"from": rando}
+    )
+    assert vault_proxy.balanceOf(accounts[2]) == amount
 
 
 
