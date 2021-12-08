@@ -264,21 +264,21 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
 
     /// @notice Set minimum threshold of underlying that must be deposited in strategy
     /// @notice Can only be changed by governance
-    function setMin(uint256 _min) external {
+    function setMin(uint256 _min) external whenNotPaused {
         _onlyGovernance();
         min = _min;
     }
 
     /// @notice Change controller address
     /// @notice Can only be changed by governance
-    function setController(address _controller) public {
+    function setController(address _controller) public whenNotPaused {
         _onlyGovernance();
         controller = _controller;
     }
 
     /// @notice Change guardian address
     /// @notice Can only be changed by governance
-    function setGuardian(address _guardian) external {
+    function setGuardian(address _guardian) external whenNotPaused {
         _onlyGovernance();
         guardian = _guardian;
     }
