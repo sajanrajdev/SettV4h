@@ -68,9 +68,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
 
     modifier whenNotPaused() override {
         require(!paused(), "Pausable: paused");
-        if(address(GAC) != address(0)){
-            require(!GAC.paused(), "Pausable: GAC Paused");
-        }
+        require(!GAC.paused(), "Pausable: GAC Paused");
         _;
     }
 
@@ -82,8 +80,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
         address _guardian,
         bool _overrideTokenName,
         string memory _namePrefix,
-        string memory _symbolPrefix,
-        address _gac
+        string memory _symbolPrefix
     ) public initializer whenNotPaused {
         IERC20Detailed namedToken = IERC20Detailed(_token);
         string memory tokenName = namedToken.name();
