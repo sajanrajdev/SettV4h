@@ -8,5 +8,7 @@ interface IGac {
     function transferFromDisabled() external view returns (bool);
 
     function unpause() external;
+    function pause() external;
     function enableTransferFrom() external;
+    function disableTransferFrom() external;
 }
