@@ -248,31 +248,8 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
             amount, 
             {"from": rando}
         )
-    gac.enableTransferFrom({"from": gac_gov})
 
-    # Globally pause
-    gac.pause({"from": gac_gov})
-
-    # Cannot transferFrom while globally paused
-    with brownie.reverts("Pausable: GAC Paused"):
-        vault_proxy.transferFrom(
-            multi.address, 
-            rando.address, 
-            amount, 
-            {"from": rando}
-        )
-
-    # Cannot perform transfer while globally paused
-    with brownie.reverts("Pausable: GAC Paused"):
-        vault_proxy.transfer(
-            accounts[2],
-            amount, 
-            {"from": rando}
-        )
-
-    # Globally pause
-    gac.unpause({"from": gac_gov})
-    
+    # Transfer
     vault_proxy.transfer(
         accounts[2],
         amount, 
