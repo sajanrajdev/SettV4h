@@ -370,7 +370,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     /// ===== ERC20 Overrides =====
 
     /// @dev Add blockLock to transfers, users cannot transfer tokens in the same block as a deposit or withdrawal.
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual whenNotPaused override returns (bool) {
         _blockLocked();
         return super.transfer(recipient, amount);
     }
