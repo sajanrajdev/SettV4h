@@ -4,6 +4,7 @@ pragma solidity ^0.6.11;
 
 interface IGac {
     function DEV_MULTISIG() external view returns (address);
+    function WAR_ROOM_ACL() external view returns (address);
     function paused() external view returns (bool);
     function transferFromDisabled() external view returns (bool);
 
