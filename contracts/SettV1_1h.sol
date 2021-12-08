@@ -379,7 +379,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
         address sender,
         address recipient,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) public virtual whenNotPaused override returns (bool) {
         _blockLocked();
         require(!GAC.transferFromDisabled(), "transferFrom: GAC transferFromDisabled");
         return super.transferFrom(sender, recipient, amount);
