@@ -194,6 +194,10 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
         require(blockLock[msg.sender] < block.number, "blockLocked");
     }
 
+    function _blacklisted(address _recipient) internal view {
+        require(!GAC.isBlacklisted(_recipient), "blacklisted");
+    }
+
     /// ===== View Functions =====
 
     function version() public view returns (string memory) {
@@ -227,6 +231,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     function deposit(uint256 _amount) public whenNotPaused {
         _defend();
         _blockLocked();
+        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _deposit(_amount);
@@ -237,6 +242,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     function depositAll() external whenNotPaused {
         _defend();
         _blockLocked();
+        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _deposit(token.balanceOf(msg.sender));
@@ -246,6 +252,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     function withdraw(uint256 _shares) public whenNotPaused {
         _defend();
         _blockLocked();
+        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _withdraw(_shares);
@@ -255,6 +262,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     function withdrawAll() external whenNotPaused {
         _defend();
         _blockLocked();
+        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _withdraw(balanceOf(msg.sender));
@@ -372,6 +380,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
     /// @dev Add blockLock to transfers, users cannot transfer tokens in the same block as a deposit or withdrawal.
     function transfer(address recipient, uint256 amount) public virtual whenNotPaused override returns (bool) {
         _blockLocked();
+        _blacklisted(msg.sender);
         return super.transfer(recipient, amount);
     }
 
@@ -381,6 +390,7 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
         uint256 amount
     ) public virtual whenNotPaused override returns (bool) {
         _blockLocked();
+        _blacklisted(msg.sender);
         require(!GAC.transferFromDisabled(), "transferFrom: GAC transferFromDisabled");
         return super.transferFrom(sender, recipient, amount);
     }
