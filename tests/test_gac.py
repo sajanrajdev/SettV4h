@@ -268,9 +268,21 @@ def test_gac_blacklist(settAddress, proxy_admin, proxy_admin_gov, bve_cvx, bcvx_
             with brownie.reverts("blacklisted"):
                 vault_proxy.depositAll([], {"from": exploiter})
 
-        if settAddress in [SETT_ADDRESSES_V1, SETT_ADDRESSES_V4]:
+        if settAddress in [*SETT_ADDRESSES_V1, *SETT_ADDRESSES_V4]:
             with brownie.reverts("blacklisted"):
                 vault_proxy.depositFor(rando, want_balance, {"from": exploiter})
+
+            with brownie.reverts("blacklisted"):
+                vault_proxy.depositFor(exploiter, want.balanceOf(user), {"from": user})
+
+            if settAddress in SETT_ADDRESSES_V4:
+                with brownie.reverts("blacklisted"):
+                    vault_proxy.depositFor(rando, want_balance, [], {"from": exploiter})
+
+                with brownie.reverts("blacklisted"):
+                    vault_proxy.depositFor(
+                        exploiter, want.balanceOf(user), [], {"from": user}
+                    )
 
         with brownie.reverts("blacklisted"):
             vault_proxy.withdraw(vault_balance, {"from": exploiter})
@@ -282,11 +294,24 @@ def test_gac_blacklist(settAddress, proxy_admin, proxy_admin_gov, bve_cvx, bcvx_
             vault_proxy.transfer(rando, vault_balance, {"from": exploiter})
 
         with brownie.reverts("blacklisted"):
+            vault_proxy.transfer(exploiter, vault_proxy.balanceOf(user), {"from": user})
+
+        vault_proxy.approve(exploiter, MAX_UINT256, {"from": user})
+
+        with brownie.reverts("blacklisted"):
             vault_proxy.transferFrom(
                 user, rando, vault_proxy.balanceOf(user), {"from": exploiter}
             )
 
+        vault_proxy.approve(rando, MAX_UINT256, {"from": user})
+
+        with brownie.reverts("blacklisted"):
+            vault_proxy.transferFrom(
+                user, exploiter, vault_proxy.balanceOf(user), {"from": rando}
+            )
+
         vault_proxy.approve(rando, MAX_UINT256, {"from": exploiter})
+
         with brownie.reverts("blacklisted"):
             vault_proxy.transferFrom(exploiter, rando, vault_balance, {"from": rando})
 
@@ -304,18 +329,17 @@ def test_gac_blacklist(settAddress, proxy_admin, proxy_admin_gov, bve_cvx, bcvx_
     if settAddress in SETT_ADDRESSES_V4:
         vault_proxy.depositAll([], {"from": user})
 
-    if settAddress in [SETT_ADDRESSES_V1, SETT_ADDRESSES_V4]:
+    if settAddress in [*SETT_ADDRESSES_V1, *SETT_ADDRESSES_V4]:
         vault_proxy.depositFor(rando, want_balance, {"from": user})
+
+        if settAddress in SETT_ADDRESSES_V4:
+            vault_proxy.depositFor(rando, want_balance, [], {"from": user})
 
     vault_proxy.withdraw(vault_balance, {"from": user})
 
     vault_proxy.withdrawAll({"from": user})
 
     vault_proxy.transfer(rando, vault_balance, {"from": user})
-
-    vault_proxy.transferFrom(
-        user, rando, vault_proxy.balanceOf(user), {"from": user}
-    )
 
     vault_proxy.approve(rando, MAX_UINT256, {"from": user})
     vault_proxy.transferFrom(user, rando, vault_balance, {"from": rando})

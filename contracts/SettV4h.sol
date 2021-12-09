@@ -128,8 +128,8 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
         require(blockLock[msg.sender] < block.number, "blockLocked");
     }
 
-    function _blacklisted(address _recipient) internal view {
-        require(!GAC.isBlacklisted(_recipient), "blacklisted");
+    function _blacklisted(address _account) internal view {
+        require(!GAC.isBlacklisted(_account), "blacklisted");
     }
 
     /// ===== View Functions =====
@@ -208,6 +208,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
         _defend();
         _blockLocked();
         _blacklisted(msg.sender);
+        _blacklisted(_recipient);
 
         _lockForBlock(_recipient);
         _depositForWithAuthorization(_recipient, _amount, new bytes32[](0));
@@ -222,6 +223,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
         _defend();
         _blockLocked();
         _blacklisted(msg.sender);
+        _blacklisted(_recipient);
 
         _lockForBlock(_recipient);
         _depositForWithAuthorization(_recipient, _amount, proof);
@@ -387,6 +389,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
     function transfer(address recipient, uint256 amount) public virtual override whenNotPaused returns (bool) {
         _blockLocked();
         _blacklisted(msg.sender);
+        _blacklisted(recipient);
         return super.transfer(recipient, amount);
     }
 
@@ -398,6 +401,7 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
         _blockLocked();
         _blacklisted(msg.sender);
         _blacklisted(sender);
+        _blacklisted(recipient);
         require(!GAC.transferFromDisabled(), "transferFrom: GAC transferFromDisabled");
         return super.transferFrom(sender, recipient, amount);
     }
