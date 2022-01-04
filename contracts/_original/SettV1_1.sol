@@ -1,18 +1,12 @@
-
 /**
- *Submitted for verification at Etherscan.io on 2021-04-18
+ *Submitted for verification at Etherscan.io on 2020-12-27
 */
 
-// Sources flattened with hardhat v2.0.3 https://hardhat.org
-
-// File deps/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol
+// Dependency file: deps/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol
 
 // SPDX-License-Identifier: MIT
 
-import "../interfaces/IGac.sol";
-
-
-pragma solidity ^0.6.0;
+// pragma solidity ^0.6.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -51,7 +45,7 @@ interface IERC20Upgradeable {
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
+     * // importANT: Beware that changing an allowance with this method brings the risk
      * that someone may use both the old and the new allowance by unfortunate
      * transaction ordering. One possible solution to mitigate this race
      * condition is to first reduce the spender's allowance to 0 and set the
@@ -89,11 +83,10 @@ interface IERC20Upgradeable {
 }
 
 
-// File deps/@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol
+// Dependency file: deps/@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol
 
 
-
-pragma solidity ^0.6.0;
+// pragma solidity ^0.6.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -252,11 +245,10 @@ library SafeMathUpgradeable {
 }
 
 
-// File deps/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol
+// Dependency file: deps/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol
 
 
-
-pragma solidity ^0.6.2;
+// pragma solidity ^0.6.2;
 
 /**
  * @dev Collection of functions related to the address type
@@ -265,7 +257,7 @@ library AddressUpgradeable {
     /**
      * @dev Returns true if `account` is a contract.
      *
-     * [IMPORTANT]
+     * [// importANT]
      * ====
      * It is unsafe to assume that an address for which this function returns
      * false is an externally-owned account (EOA) and not a contract.
@@ -301,7 +293,7 @@ library AddressUpgradeable {
      *
      * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].
      *
-     * IMPORTANT: because control is transferred to `recipient`, care must be
+     * // importANT: because control is transferred to `recipient`, care must be
      * taken to not create reentrancy vulnerabilities. Consider using
      * {ReentrancyGuard} or the
      * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
@@ -397,13 +389,14 @@ library AddressUpgradeable {
 }
 
 
-// File deps/@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol
+// Dependency file: deps/@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol
 
 
+// pragma solidity ^0.6.0;
 
-pragma solidity ^0.6.0;
-
-
+// import "deps/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
 /**
  * @title SafeERC20
@@ -474,11 +467,10 @@ library SafeERC20Upgradeable {
 }
 
 
-// File deps/@openzeppelin/contracts-upgradeable/proxy/Initializable.sol
+// Dependency file: deps/@openzeppelin/contracts-upgradeable/proxy/Initializable.sol
 
 
-
-pragma solidity >=0.4.24 <0.7.0;
+// pragma solidity >=0.4.24 <0.7.0;
 
 
 /**
@@ -540,11 +532,11 @@ abstract contract Initializable {
 }
 
 
-// File deps/@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol
+// Dependency file: deps/@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol
 
 
-
-pragma solidity ^0.6.0;
+// pragma solidity ^0.6.0;
+// import "deps/@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -575,15 +567,16 @@ abstract contract ContextUpgradeable is Initializable {
 }
 
 
-// File deps/@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol
+// Dependency file: deps/@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol
 
 
+// pragma solidity ^0.6.0;
 
-pragma solidity ^0.6.0;
-
-
-
-
+// import "deps/@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -891,13 +884,13 @@ contract ERC20Upgradeable is Initializable, ContextUpgradeable, IERC20Upgradeabl
 }
 
 
-// File deps/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol
+// Dependency file: deps/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol
 
 
+// pragma solidity ^0.6.0;
 
-pragma solidity ^0.6.0;
-
-
+// import "deps/@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 /**
  * @dev Contract module which provides a basic access control mechanism, where
  * there is an account (an owner) that can be granted exclusive access to
@@ -969,15 +962,112 @@ contract OwnableUpgradeable is Initializable, ContextUpgradeable {
 }
 
 
-// File interfaces/badger/IController.sol
+// Dependency file: deps/@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol
 
 
-pragma solidity >=0.5.0 <0.8.0;
+// pragma solidity ^0.6.0;
+
+// import "deps/@openzeppelin/contracts-upgradeable/GSN/ContextUpgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+
+/**
+ * @dev Contract module which allows children to implement an emergency stop
+ * mechanism that can be triggered by an authorized account.
+ *
+ * This module is used through inheritance. It will make available the
+ * modifiers `whenNotPaused` and `whenPaused`, which can be applied to
+ * the functions of your contract. Note that they will not be pausable by
+ * simply including this module, only once the modifiers are put in place.
+ */
+contract PausableUpgradeable is Initializable, ContextUpgradeable {
+    /**
+     * @dev Emitted when the pause is triggered by `account`.
+     */
+    event Paused(address account);
+
+    /**
+     * @dev Emitted when the pause is lifted by `account`.
+     */
+    event Unpaused(address account);
+
+    bool private _paused;
+
+    /**
+     * @dev Initializes the contract in unpaused state.
+     */
+    function __Pausable_init() internal initializer {
+        __Context_init_unchained();
+        __Pausable_init_unchained();
+    }
+
+    function __Pausable_init_unchained() internal initializer {
+        _paused = false;
+    }
+
+    /**
+     * @dev Returns true if the contract is paused, and false otherwise.
+     */
+    function paused() public view returns (bool) {
+        return _paused;
+    }
+
+    /**
+     * @dev Modifier to make a function callable only when the contract is not paused.
+     *
+     * Requirements:
+     *
+     * - The contract must not be paused.
+     */
+    modifier whenNotPaused() {
+        require(!_paused, "Pausable: paused");
+        _;
+    }
+
+    /**
+     * @dev Modifier to make a function callable only when the contract is paused.
+     *
+     * Requirements:
+     *
+     * - The contract must be paused.
+     */
+    modifier whenPaused() {
+        require(_paused, "Pausable: not paused");
+        _;
+    }
+
+    /**
+     * @dev Triggers stopped state.
+     *
+     * Requirements:
+     *
+     * - The contract must not be paused.
+     */
+    function _pause() internal virtual whenNotPaused {
+        _paused = true;
+        emit Paused(_msgSender());
+    }
+
+    /**
+     * @dev Returns to normal state.
+     *
+     * Requirements:
+     *
+     * - The contract must be paused.
+     */
+    function _unpause() internal virtual whenPaused {
+        _paused = false;
+        emit Unpaused(_msgSender());
+    }
+    uint256[49] private __gap;
+}
+
+
+// Dependency file: interfaces/badger/IController.sol
+
+// pragma solidity >=0.5.0 <0.8.0;
 
 interface IController {
     function withdraw(address, uint256) external;
-
-    function strategies(address) external view returns (address);
 
     function balanceOf(address) external view returns (uint256);
 
@@ -991,11 +1081,10 @@ interface IController {
 }
 
 
-// File interfaces/erc20/IERC20Detailed.sol
+// Dependency file: interfaces/erc20/IERC20Detailed.sol
 
 
-
-pragma solidity ^0.6.0;
+// pragma solidity ^0.6.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -1037,7 +1126,7 @@ interface IERC20Detailed {
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
+     * // importANT: Beware that changing an allowance with this method brings the risk
      * that someone may use both the old and the new allowance by unfortunate
      * transaction ordering. One possible solution to mitigate this race
      * condition is to first reduce the spender's allowance to 0 and set the
@@ -1075,15 +1164,16 @@ interface IERC20Detailed {
 }
 
 
-// File contracts/badger-sett/SettAccessControlV1.sol
+// Dependency file: contracts/badger-sett/SettAccessControl.sol
 
+// pragma solidity ^0.6.11;
 
-pragma solidity ^0.6.11;
+// import "deps/@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
 /*
     Common base for permissioned roles throughout Sett ecosystem
 */
-contract SettAccessControlV1 is Initializable {
+contract SettAccessControl is Initializable {
     address public governance;
     address public strategist;
     address public keeper;
@@ -1128,15 +1218,16 @@ contract SettAccessControlV1 is Initializable {
 }
 
 
-// File contracts/badger-sett/SettAccessControlDefendedV1.sol
+// Dependency file: contracts/badger-sett/SettAccessControlDefended.sol
 
+// pragma solidity ^0.6.11;
 
-pragma solidity ^0.6.11;
+// import "contracts/badger-sett/SettAccessControl.sol";
 
 /*
     Add ability to prevent unwanted contract access to Sett permissions
 */
-contract SettAccessControlDefendedV1 is SettAccessControlV1 {
+contract SettAccessControlDefended is SettAccessControl {
     mapping (address => bool) public approved;
 
     function approveContractAccess(address account) external {
@@ -1156,26 +1247,35 @@ contract SettAccessControlDefendedV1 is SettAccessControlV1 {
 }
 
 
-// File contracts/badger-sett/SettV1.sol
-
+// Root file: contracts/badger-sett/Sett.sol
 
 
 pragma solidity ^0.6.11;
 
+// import "deps/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+// import "deps/@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
+// import "interfaces/badger/IController.sol";
+// import "interfaces/erc20/IERC20Detailed.sol";
+// import "contracts/badger-sett/SettAccessControlDefended.sol";
 
-
-
-
-
-
-/*
+/* 
     Source: https://github.com/iearn-finance/yearn-protocol/blob/develop/contracts/vaults/yVault.sol
 
-    This sett contract is for temporarily adding a depositFor() method to V1 setts (e.g. rencrv, tbtc, sbtc etc).
-    TODO: Merge this upgradeable sett into respective sett upgrade path once sett upgrades PR lands.
+    Version 1.1
+    * Strategist no longer has special function calling permissions
+    * Version function added to contract
+    * All write functions are pausable
+    * Keeper or governance can pause
+    * Only governance can unpause
+    * Governance, by maintaining upgradability rights, can remove the keepers' ability to pause
 */
-contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
+contract Sett is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDefended {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using AddressUpgradeable for address;
     using SafeMathUpgradeable for uint256;
@@ -1186,6 +1286,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     uint256 public constant max = 10000;
 
     address public controller;
+    address public guardian;
 
     mapping(address => uint256) public blockLock;
 
@@ -1199,10 +1300,11 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
         address _controller,
         address _governance,
         address _keeper,
+        address _guardian,
         bool _overrideTokenName,
         string memory _namePrefix,
         string memory _symbolPrefix
-    ) public initializer {
+    ) public initializer whenNotPaused {
         IERC20Detailed namedToken = IERC20Detailed(_token);
         string memory tokenName = namedToken.name();
         string memory tokenSymbol = namedToken.symbol();
@@ -1225,10 +1327,14 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
         strategist = address(0);
         keeper = _keeper;
         controller = _controller;
+        guardian = _guardian;
 
         min = 9500;
 
         emit FullPricePerShareUpdated(getPricePerFullShare(), now, block.number);
+
+        // Paused on launch
+        _pause();
     }
 
     /// ===== Modifiers =====
@@ -1237,15 +1343,19 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
         require(msg.sender == controller, "onlyController");
     }
 
+    function _onlyAuthorizedPausers() internal view {
+        require(msg.sender == guardian || msg.sender == governance, "onlyPausers");
+    }
+
     function _blockLocked() internal view {
         require(blockLock[msg.sender] < block.number, "blockLocked");
     }
 
-    function _blacklisted(address _account) internal view {
-        require(!GAC.isBlacklisted(_account), "blacklisted");
-    }
-
     /// ===== View Functions =====
+
+    function version() public view returns (string memory) {
+        return "1.1";
+    }
 
     function getPricePerFullShare() public view returns (uint256) {
         if (totalSupply() == 0) {
@@ -1274,23 +1384,9 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     function deposit(uint256 _amount) public whenNotPaused {
         _defend();
         _blockLocked();
-        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _deposit(_amount);
-    }
-
-    /// @notice Deposit assets into the Sett, and transfer corresponding shares to the recipient
-    /// @notice Only callable by EOA accounts that pass the _defend() check
-    function depositFor(address recipient, uint256 _amount) public whenNotPaused {
-        _defend();
-        _blockLocked();
-        _blacklisted(msg.sender);
-        _blacklisted(recipient);
-
-        // Lock for recipient so receiver cannot perform any other actions within the block.
-        _lockForBlock(recipient);
-        _depositFor(recipient, _amount);
     }
 
     /// @notice Convenience function: Deposit entire balance of asset into the Sett, and return corresponding shares to the user
@@ -1298,7 +1394,6 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     function depositAll() external whenNotPaused {
         _defend();
         _blockLocked();
-        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _deposit(token.balanceOf(msg.sender));
@@ -1308,7 +1403,6 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     function withdraw(uint256 _shares) public whenNotPaused {
         _defend();
         _blockLocked();
-        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _withdraw(_shares);
@@ -1318,7 +1412,6 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     function withdrawAll() external whenNotPaused {
         _defend();
         _blockLocked();
-        _blacklisted(msg.sender);
 
         _lockForBlock(msg.sender);
         _withdraw(balanceOf(msg.sender));
@@ -1339,6 +1432,14 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
         _onlyGovernance();
         controller = _controller;
     }
+
+    /// @notice Change guardian address
+    /// @notice Can only be changed by governance
+    function setGuardian(address _guardian) external {
+        _onlyGovernance();
+        guardian = _guardian;
+    }
+
 
     /// ===== Permissioned Actions: Controller =====
 
@@ -1365,21 +1466,26 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
 
     /// @dev Emit event tracking current full price per share
     /// @dev Provides a pure on-chain way of approximating APY
-    function trackFullPricePerShare() external {
+    function trackFullPricePerShare() external whenNotPaused {
         _onlyAuthorizedActors();
         emit FullPricePerShareUpdated(getPricePerFullShare(), now, block.number);
     }
 
-    /// ===== Internal Implementations =====
-
-    // @dev deposit for msg.sender
-    function _deposit(uint256 _amount) internal {
-        _depositFor(msg.sender, _amount);
+    function pause() external {
+        _onlyAuthorizedPausers();
+        _pause();
     }
+
+    function unpause() external {
+        _onlyGovernance();
+        _unpause();
+    }
+
+    /// ===== Internal Implementations =====
 
     /// @dev Calculate the number of shares to issue for a given deposit
     /// @dev This is based on the realized value of underlying assets between Sett & associated Strategy
-    function _depositFor(address recipient, uint256 _amount) internal {
+    function _deposit(uint256 _amount) internal {
         uint256 _pool = balance();
         uint256 _before = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), _amount);
@@ -1391,7 +1497,7 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
         } else {
             shares = (_amount.mul(totalSupply())).div(_pool);
         }
-        _mint(recipient, shares);
+        _mint(msg.sender, shares);
     }
 
     // No rebalance implementation for lower fees and faster swaps
@@ -1421,68 +1527,17 @@ contract SettV1h is ERC20Upgradeable, SettAccessControlDefendedV1 {
     /// ===== ERC20 Overrides =====
 
     /// @dev Add blockLock to transfers, users cannot transfer tokens in the same block as a deposit or withdrawal.
-    function transfer(address recipient, uint256 amount) public virtual override whenNotPaused returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         _blockLocked();
-        _blacklisted(msg.sender);
-        _blacklisted(recipient);
         return super.transfer(recipient, amount);
     }
-
-
-    // ==== SettV1h Edits ====
-
-    // It's bad form, but this way all code we added is at end
-    IGac public constant GAC = IGac(0x9c58B0D88578cd75154Bdb7C8B013f7157bae35a); // Set in initializer because of tests is unchangeable (because contract is upgradeable)
-    address constant public MULTISIG = 0x9faA327AAF1b564B569Cb0Bc0FDAA87052e8d92c;
 
     function transferFrom(
         address sender,
         address recipient,
         uint256 amount
-    ) public virtual override whenNotPaused returns (bool) {
+    ) public virtual override returns (bool) {
         _blockLocked();
-        _blacklisted(msg.sender);
-        _blacklisted(sender);
-        _blacklisted(recipient);
-        require(!GAC.transferFromDisabled(), "transferFrom: GAC transferFromDisabled");
         return super.transferFrom(sender, recipient, amount);
-    }
-
-
-
-    /// @dev To add retroactive pausability to old setts
-    /// @notice To avoid messing up storage we exclusively check the GAC
-    modifier whenNotPaused() {
-        require(!GAC.paused(), "Pausable: GAC Paused");
-        _;
-    }
-
-    /// @dev Takes the funds from the exploiter address and sends it to the multisig
-    function patchBalances() external {
-        _onlyGovernance();
-
-        address payable[11] memory EXPLOITER_ADDRESS = [
-            0x1FCdb04d0C5364FBd92C73cA8AF9BAA72c269107,
-            0xa33B95ea28542Ada32117B60E4F5B4cB7D1Fc19B,
-            0x4fbf7701b3078B5bed6F3e64dF3AE09650eE7DE5,
-            0x1B1b391D1026A4e3fB7F082ede068B25358a61F2,
-            0xEcD91D07b1b6B81d24F2a469de8e47E3fe3050fd,
-            0x691dA2826AC32BBF2a4b5d6f2A07CE07552A9A8E,
-            0x91d65D67FC573605bCb0b5E39F9ef6E18aFA1586,
-            0x0B88A083dc7b8aC2A84eBA02E4acb2e5f2d3063C,
-            0x2eF1b70F195fd0432f9C36fB2eF7C99629B0398c,
-            0xbbfD8041EbDE22A7f3e19600B4bab4925Cc97f7D,
-            0xe06eD65924dB2e7b4c83E07079A424C8a36701E5
-        ];
-        uint256 length =  EXPLOITER_ADDRESS.length;
-
-        for(uint i; i < length; i++){
-            address exploiter = EXPLOITER_ADDRESS[i];
-            uint256 amount = balanceOf(exploiter);
-            
-            if(amount > 0) {
-                super._transfer(exploiter, MULTISIG, amount);
-            }
-        }
     }
 }
