@@ -1,8 +1,9 @@
 import brownie
 from brownie import SettV4h, interface, accounts, ERC20Upgradeable
 import pytest
-from badger_utils.token_utils.distribute_from_whales_realtime import distribute_from_whales_realtime_percentage
-
+from badger_utils.token_utils.distribute_from_whales_realtime import (
+    distribute_from_whales_realtime_percentage
+)
 """
 Tests for Upgrading Sett V4 to V4h
 There's gonna be a separate suite for V1 to V4h

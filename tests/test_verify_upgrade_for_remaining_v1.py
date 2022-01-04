@@ -1,7 +1,9 @@
 import brownie
 from brownie import interface, SettV1h, ERC20Upgradeable, accounts
 import pytest
-from badger_utils.token_utils.distribute_from_whales_realtime import distribute_from_whales_realtime_percentage
+from badger_utils.token_utils.distribute_from_whales_realtime import (
+    distribute_from_whales_realtime_percentage
+)
 
 """
 Tests for Upgrading Sett V1 to SettV1h
