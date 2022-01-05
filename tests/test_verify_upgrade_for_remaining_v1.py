@@ -84,7 +84,7 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
 
 
     ## TODO: Add write operations
-    new_vault_logic = SettV1h.deploy({"from": governance})
+    new_vault_logic = "0x9376B47E7eC9D4cfd5313Dc1FB0DFF4F61E8c481"
 
     # Deploy new logic
     proxy_admin.upgrade(vault_proxy, new_vault_logic, {"from": proxy_admin_gov})

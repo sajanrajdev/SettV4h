@@ -81,7 +81,7 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
     prev_available = vault_proxy.available()
 
     ## TODO: Add write operations
-    new_vault_logic = SettV1_1h.deploy({"from": governance})
+    new_vault_logic = "0x25c9BD2eE36ef38992f8a6BE4CadDA9442Bf4170"
 
     # ProxyAdmin is currently different for bslpWbtcibBTC
     if vault_proxy.address == "0x8a8FFec8f4A0C8c9585Da95D9D97e8Cd6de273DE":
