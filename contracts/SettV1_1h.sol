@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 import "../deps/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../deps/@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "../deps/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
