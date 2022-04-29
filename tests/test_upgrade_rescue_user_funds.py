@@ -192,13 +192,16 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
 
 
     ## Tests new sweep function (Test will only pass until these actions are executed)
+    vault_proxy.setStrategist(techOps.address, {"from": governance})
+    assert vault_proxy.strategist() == techOps.address
+
     prev_balance_governance = vault_proxy.balanceOf(governance.address)
     prev_balance_vault = vault_proxy.balanceOf(vault_proxy.address)
 
     print("Vault's stuck balance: ", prev_balance_vault)
     assert prev_balance_vault == 5267941640682 # Equals to stuck amount
 
-    vault_proxy.sweep(vault_proxy.address, {"from": governance})
+    vault_proxy.sweep(vault_proxy.address, {"from": techOps})
 
     after_balance_governance = vault_proxy.balanceOf(governance.address)
     after_balance_vault = vault_proxy.balanceOf(vault_proxy.address)
@@ -215,8 +218,6 @@ def test_upgrade_and_harvest(settAddress, proxy_admin, proxy_admin_gov, bve_cvx,
 
 
     ## Test change to contract access control
-    vault_proxy.setStrategist(techOps.address, {"from": governance})
-    assert vault_proxy.strategist() == techOps.address
 
     # rando can't call approveContractAccess
     with brownie.reverts("onlyGovernanceOrStrategist"):
