@@ -33,6 +33,16 @@ def bcvx_crv():
     """
     return SettV4h.at("0x2B5455aac8d64C14786c3a29858E43b5945819C0")
 
+
+@pytest.fixture
+def bSlp_whale():
+    return accounts.at("0xEAE2faf973Ac080625E53Af28159419D2FEf152C", force=True)
+
+
+@pytest.fixture
+def techOps():
+    return accounts.at("0x86cbD0ce0c087b482782c181dA8d191De18C8275", force=True)
+
 ## Forces reset before each test
 @pytest.fixture(autouse=True)
 def isolation(fn_isolation):
