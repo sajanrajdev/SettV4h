@@ -35,7 +35,6 @@ There's gonna be a separate suite for V1 to V4h
 # https://etherscan.io/address/0x937B8E917d0F36eDEBBA8E459C5FB16F3b315551
 # SettV4
 
-ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 BADGER = "0x3472A5A71965499acd81997a54BBA8D852C6E53d"
 BADGER_WHALE = "0x34e2741a3F8483dBe5231F61C005110ff4B9F50A"
 
@@ -270,9 +269,6 @@ def test_upgrade_and_approve_access(
     # unhappy paths
     with brownie.reverts("onlyGovernanceOrStrategist"):
         vault_proxy.sweep(BADGER, {"from": accounts[0]})
-
-    with brownie.reverts("NULL_ADDRESS"):
-        vault_proxy.sweep(ZERO_ADDRESS, {"from": governance})
 
     with brownie.reverts("WANT_TOKEN"):
         vault_proxy.sweep(vault_proxy.token(), {"from": governance})

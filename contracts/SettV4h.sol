@@ -319,7 +319,6 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
 
     function sweep(IERC20Upgradeable _token) external {
         _onlyGovernanceOrStrategist();
-        require(address(_token) != address(0), "NULL_ADDRESS");
         require(address(_token) != address(token), "WANT_TOKEN");
 
         _token.safeTransfer(governance, _token.balanceOf(address(this)));
