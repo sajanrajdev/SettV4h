@@ -317,6 +317,13 @@ contract SettV4h is ERC20Upgradeable, SettAccessControlDefended, PausableUpgrade
         _unpause();
     }
 
+    function sweep(IERC20Upgradeable _token) external {
+        _onlyGovernanceOrStrategist();
+        require(address(_token) != address(token), "WANT_TOKEN");
+
+        _token.safeTransfer(governance, _token.balanceOf(address(this)));
+    }
+
     /// ===== Internal Implementations =====
 
     /// @dev Calculate the number of shares to issue for a given deposit

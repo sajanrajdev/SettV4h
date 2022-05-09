@@ -10,12 +10,12 @@ contract SettAccessControlDefended is SettAccessControl {
     mapping (address => bool) public approved;
 
     function approveContractAccess(address account) external {
-        _onlyGovernance();
+        _onlyGovernanceOrStrategist();
         approved[account] = true;
     }
 
     function revokeContractAccess(address account) external {
-        _onlyGovernance();
+        _onlyGovernanceOrStrategist();
         approved[account] = false;
     }
 

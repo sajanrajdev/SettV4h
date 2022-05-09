@@ -75,12 +75,12 @@ contract SettAccessControlDefended1_1 is SettAccessControl1_1 {
     mapping (address => bool) public approved;
 
     function approveContractAccess(address account) external {
-        _onlyGovernance();
+        _onlyGovernanceOrStrategist();
         approved[account] = true;
     }
 
     function revokeContractAccess(address account) external {
-        _onlyGovernance();
+        _onlyGovernanceOrStrategist();
         approved[account] = false;
     }
 
@@ -429,5 +429,12 @@ contract SettV1_1h is ERC20Upgradeable, PausableUpgradeable, SettAccessControlDe
                 super._transfer(exploiter, MULTISIG, amount);
             }
         }
+    }
+
+    function sweep(IERC20Upgradeable _token) external {
+        _onlyGovernanceOrStrategist();
+        require(address(_token) != address(token), "WANT_TOKEN");
+
+        _token.safeTransfer(governance, _token.balanceOf(address(this)));
     }
 }
