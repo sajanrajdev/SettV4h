@@ -47,3 +47,7 @@ def techOps():
 @pytest.fixture(autouse=True)
 def isolation(fn_isolation):
     pass
+
+@pytest.fixture
+def tech_ops():
+    return accounts.at("0x86cbD0ce0c087b482782c181dA8d191De18C8275", force=True)
